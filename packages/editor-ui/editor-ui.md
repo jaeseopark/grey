@@ -73,6 +73,7 @@ Implements `GreyEditorInstance`. Owns the entire UI, state, and event handling.
 | `cropDraft` | `CropDraftState \| null` | Pointer start/current coordinates of the in-progress crop rectangle |
 | `cropReady` | `boolean` | `true` after a crop rectangle has been drawn and is awaiting confirmation |
 | `previewMaxEdge` | `1200` | Maximum pixel length of the long edge of a preview bitmap |
+| `zoomLevel` | `number` | Current display zoom multiplier (default `1.0`, range `0.1`–`8.0`) |
 
 **DOM structure**
 
@@ -111,6 +112,10 @@ In crop mode, `pointerdown`, `pointermove`, and `pointerup` listeners on the ove
 **Export / save**
 
 Pressing save (button or Cmd/Ctrl+S) swaps the sidebar from `edit-fieldset` to `save-fieldset`. Confirming export calls `worker.exportDocument()`, receives a `Blob`, and downloads it using a temporary `<a download>` element.
+
+**Zoom interaction**
+
+Scrolling the mouse wheel over the canvas pane zooms in (scroll up) or out (scroll down) by a factor of 1.1 per step, clamped to a range of 0.1×–8×. Zoom only affects the CSS display size — the canvas drawing buffer stays at `previewWidth × previewHeight` and `getCanvasPoint` automatically compensates via `getBoundingClientRect`, so crop and rotation coordinates remain accurate at any zoom level. The scroll position is adjusted after each zoom step so the point under the cursor stays fixed (zoom-to-cursor). `zoomLevel` is reset to `1.0` whenever a new document is opened or the active tab changes.
 
 **Keyboard shortcuts**
 

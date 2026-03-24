@@ -240,6 +240,9 @@ class GreyEditorApp implements GreyEditorInstance {
   private dragDepth = 0;
   private errors: string[] = [];
   private readonly previewMaxEdge = 1200;
+  private zoomLevel = 1.0;
+  private readonly zoomMin = 0.1;
+  private readonly zoomMax = 8.0;
 
   constructor(options: CreateGreyEditorOptions) {
     this.options = {
@@ -362,6 +365,7 @@ class GreyEditorApp implements GreyEditorInstance {
         });
 
         this.activeDocumentId = documentId;
+        this.zoomLevel = 1.0;
         this.render();
       } catch (error) {
         this.pushError(error instanceof Error ? error.message : `Failed to open ${file.name}.`);
@@ -480,6 +484,7 @@ class GreyEditorApp implements GreyEditorInstance {
 
       this.activeDocumentId = documentId;
       this.cropDraft = null;
+      this.zoomLevel = 1.0;
       this.render();
     });
     this.listen(this.dropzoneElement, 'dragenter', (event) => {
@@ -510,6 +515,9 @@ class GreyEditorApp implements GreyEditorInstance {
     this.listen(this.overlayElement, 'pointerdown', (event) => this.handlePointerDown(event as PointerEvent));
     this.listen(window, 'pointermove', (event) => this.handlePointerMove(event as PointerEvent));
     this.listen(window, 'pointerup', () => this.handlePointerUp());
+    const wheelHandler = (event: Event) => this.handleWheel(event as WheelEvent);
+    this.dropzoneElement.addEventListener('wheel', wheelHandler, { passive: false });
+    this.cleanupCallbacks.push(() => this.dropzoneElement.removeEventListener('wheel', wheelHandler));
     this.listen(window, 'keydown', (event) => {
       const keyboardEvent = event as KeyboardEvent;
 
@@ -767,8 +775,42 @@ class GreyEditorApp implements GreyEditorInstance {
     }
   }
 
-  private applyCrop(): void {
-    const documentRecord = this.getActiveDocumentInternal();
+  private handleWheel(event: WheelEvent): void {
+    const activeDocument = this.getActiveDocumentInternal();
+    if (!activeDocument?.previewBitmap || this.canvasStackElement.hidden) return;
+    if (this.cropDraft || this.rotationDrag) return;
+
+    event.preventDefault();
+
+    const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+    const newZoom = Math.max(this.zoomMin, Math.min(this.zoomMax, this.zoomLevel * factor));
+
+    if (Math.abs(newZoom - this.zoomLevel) < 1e-9) return;
+
+    const pane = this.dropzoneElement;
+    const paneRect = pane.getBoundingClientRect();
+    const mouseInPaneX = event.clientX - paneRect.left;
+    const mouseInPaneY = event.clientY - paneRect.top;
+    const oldScrollLeft = pane.scrollLeft;
+    const oldScrollTop = pane.scrollTop;
+    const ratio = newZoom / this.zoomLevel;
+
+    this.zoomLevel = newZoom;
+
+    const displayWidth = activeDocument.previewWidth * this.zoomLevel;
+    const displayHeight = activeDocument.previewHeight * this.zoomLevel;
+    this.canvasStackElement.style.width = `${displayWidth}px`;
+    this.canvasStackElement.style.height = `${displayHeight}px`;
+    this.canvasElement.style.width = `${displayWidth}px`;
+    this.canvasElement.style.height = `${displayHeight}px`;
+    this.overlayElement.style.width = `${displayWidth}px`;
+    this.overlayElement.style.height = `${displayHeight}px`;
+
+    pane.scrollLeft = (oldScrollLeft + mouseInPaneX) * ratio - mouseInPaneX;
+    pane.scrollTop = (oldScrollTop + mouseInPaneY) * ratio - mouseInPaneY;
+  }
+
+  private applyCrop(): void {    const documentRecord = this.getActiveDocumentInternal();
 
     if (!documentRecord || !this.cropDraft || documentRecord.previewWidth === 0 || documentRecord.previewHeight === 0) {
       return;
@@ -907,12 +949,18 @@ class GreyEditorApp implements GreyEditorInstance {
 
     this.canvasStackElement.hidden = false;
     this.emptyElement.hidden = true;
-    this.canvasStackElement.style.width = `${activeDocument.previewWidth}px`;
-    this.canvasStackElement.style.height = `${activeDocument.previewHeight}px`;
+    const displayWidth = activeDocument.previewWidth * this.zoomLevel;
+    const displayHeight = activeDocument.previewHeight * this.zoomLevel;
+    this.canvasStackElement.style.width = `${displayWidth}px`;
+    this.canvasStackElement.style.height = `${displayHeight}px`;
     this.canvasElement.width = activeDocument.previewWidth;
     this.canvasElement.height = activeDocument.previewHeight;
+    this.canvasElement.style.width = `${displayWidth}px`;
+    this.canvasElement.style.height = `${displayHeight}px`;
     this.overlayElement.width = activeDocument.previewWidth;
     this.overlayElement.height = activeDocument.previewHeight;
+    this.overlayElement.style.width = `${displayWidth}px`;
+    this.overlayElement.style.height = `${displayHeight}px`;
 
     const context = this.canvasElement.getContext('2d');
 
@@ -1071,12 +1119,10 @@ class GreyEditorApp implements GreyEditorInstance {
 
   private getCanvasPoint(event: PointerEvent): { x: number; y: number } {
     const rect = this.overlayElement.getBoundingClientRect();
-    const scaleX = this.overlayElement.width / rect.width;
-    const scaleY = this.overlayElement.height / rect.height;
 
     return {
-      x: Math.max(0, Math.min(this.overlayElement.width, (event.clientX - rect.left) * scaleX)),
-      y: Math.max(0, Math.min(this.overlayElement.height, (event.clientY - rect.top) * scaleY))
+      x: Math.max(0, Math.min(this.overlayElement.width, (event.clientX - rect.left) / this.zoomLevel)),
+      y: Math.max(0, Math.min(this.overlayElement.height, (event.clientY - rect.top) / this.zoomLevel))
     };
   }
 
