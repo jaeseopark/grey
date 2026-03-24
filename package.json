@@ -1,0 +1,25 @@
+{
+  "name": "grey-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.6.2",
+  "scripts": {
+    "dev": "pnpm --filter @grey/demo dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "preview": "pnpm --filter @grey/demo preview",
+    "ci": "pnpm lint && pnpm test && pnpm build",
+    "test:e2e": "playwright test",
+    "release:check": "pnpm ci",
+    "release:publish": "pnpm -r --filter ./packages/* publish --access public --no-git-checks"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "typescript": "^5.8.2",
+    "vite": "^5.4.15",
+    "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "upng-js": "^2.1.0"
+  }
+}

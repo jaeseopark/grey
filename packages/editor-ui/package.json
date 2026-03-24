@@ -1,0 +1,27 @@
+{
+  "name": "@grey/editor-ui",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/grey-editor.js",
+  "module": "./dist/grey-editor.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/grey-editor.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@grey/editor-core": "workspace:*",
+    "@grey/image-worker": "workspace:*",
+    "@grey/shared-types": "workspace:*"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  }
+}
