@@ -28,7 +28,7 @@ Available methods:
    Mounts the editor into a DOM element and exposes the public API. Manages all UI state and canvas interaction on the main thread.
 
 2. **UI state layer** (`GreyEditorApp` class inside `editor-ui`)
-   Manages open tabs, active mode (rotate vs crop), crop draft state, rotation preview, save panel, and keyboard shortcuts. The toolbar is mode-sensitive: rotate mode shows the angle number input, grid toggle, and reset button; crop mode shows confirm and reset crop buttons.
+   Manages open tabs, active mode (rotate vs crop vs level), crop draft state, rotation preview, levels controls, save panel, and keyboard shortcuts. The toolbar is mode-sensitive: rotate mode shows the angle number input, grid toggle, and reset button; crop mode shows confirm and reset crop buttons; level mode shows black point, midtone gamma, white point, and reset levels controls.
 
 3. **Document model layer** (`packages/editor-core`)
    Stores immutable source image metadata plus an ordered list of user operations. The original pixel data is never mutated.
@@ -52,7 +52,7 @@ type GreyDocumentRecord = {
   dirty: boolean;
 };
 
-type Operation = RotateOperation | CropOperation;
+type Operation = RotateOperation | CropOperation | LevelOperation;
 
 type ExportSettings = {
   format: 'jpeg' | 'png' | 'tiff';
@@ -68,6 +68,7 @@ Operations are append-only:
 
 * `rotate` — degrees stored as a float, clamped to -359..+359; only the trailing rotate operation is kept (set-trailing-rotate strategy)
 * `crop` — rectangle stored in the coordinate space at the time of the action
+* `level` — input levels stored as `{ blackPoint, whitePoint, gamma }`; only the trailing level operation is kept (set-trailing-level strategy)
 
 Color space conversion is not yet an `Operation` type. It is applied globally at export time (currently always greyscale).
 
@@ -156,7 +157,7 @@ Current controls:
 Processing order in the worker:
 
 1. Decode source image from its stored `ArrayBuffer`
-2. Replay document operations in sequence (rotate → crop)
+2. Replay document operations in sequence (rotate → crop → level, depending on user order)
 3. Apply colour space conversion (currently always greyscale)
 4. Compute output dimensions from scale factor or long edge
 5. Encode to target format via MozJPEG WASM (JPEG grayscale), `OffscreenCanvas.convertToBlob` (PNG), or UTIF (TIFF)

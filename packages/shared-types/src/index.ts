@@ -17,7 +17,18 @@ export interface CropOperation {
   rect: CropRect;
 }
 
-export type Operation = RotateOperation | CropOperation;
+export interface LevelsInput {
+  blackPoint: number;
+  whitePoint: number;
+  gamma: number;
+}
+
+export interface LevelOperation {
+  kind: 'level';
+  input: LevelsInput;
+}
+
+export type Operation = RotateOperation | CropOperation | LevelOperation;
 
 export interface ExportSettings {
   format: ExportFormat;

@@ -1,5 +1,5 @@
-import type { CropRect, ExportFormat, ExportSettings, GreyDocumentRecord, Operation } from '@grey/shared-types';
-import { normalizeCropRect } from './math';
+import type { CropRect, ExportFormat, ExportSettings, GreyDocumentRecord, LevelsInput, Operation } from '@grey/shared-types';
+import { clamp, normalizeCropRect } from './math';
 
 export function createDefaultExportSettings(format: ExportFormat = 'jpeg'): ExportSettings {
   return {
@@ -40,6 +40,31 @@ export function setTrailingRotationOperation(operations: Operation[], degrees: n
   }
 
   return [...next, { kind: 'rotate', degrees: normalizedDegrees }];
+}
+
+export function normalizeLevelsInput(input: LevelsInput): LevelsInput {
+  const blackPoint = Math.round(clamp(input.blackPoint, 0, 254));
+  const whitePoint = Math.round(clamp(input.whitePoint, blackPoint + 1, 255));
+  const gamma = Math.round(clamp(input.gamma, 0.1, 9.99) * 100) / 100;
+
+  return {
+    blackPoint,
+    whitePoint,
+    gamma
+  };
+}
+
+export function setTrailingLevelOperation(operations: Operation[], input: LevelsInput): Operation[] {
+  const normalizedInput = normalizeLevelsInput(input);
+  const next = [...operations];
+  const trailing = next.at(-1);
+
+  if (trailing?.kind === 'level') {
+    next[next.length - 1] = { kind: 'level', input: normalizedInput };
+    return next;
+  }
+
+  return [...next, { kind: 'level', input: normalizedInput }];
 }
 
 export function appendCropOperation(
