@@ -1,6 +1,6 @@
 {
   "name": "@grey/editor-ui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "./dist/grey-editor.js",
   "module": "./dist/grey-editor.js",

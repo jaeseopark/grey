@@ -7,7 +7,7 @@
 * **Language:** `TypeScript`
 * **Rendering:** HTML Canvas for preview, `OffscreenCanvas` in workers
 * **Heavy processing:** Web Workers to keep the UI thread responsive
-* **Image decode/encode:** browser-native APIs for JPEG/PNG; `utif` for TIFF
+* **Image decode/encode:** browser-native decode for JPEG/PNG, MozJPEG WASM for JPEG encode, browser-native PNG encode, `utif` for TIFF
 * **Unit testing:** Vitest
 * **Browser/e2e testing:** Playwright
 
