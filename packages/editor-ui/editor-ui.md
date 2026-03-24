@@ -108,6 +108,8 @@ The editor renders a fixed HTML shell (`renderShell()`) with `data-role` attribu
 
 The shell is laid out as a five-row grid: top toolbar, tabs, edit toolbar, workspace, and status bar. The workspace row is the only flexible track (`minmax(0, 1fr)`), so zoomed canvases scroll inside the canvas pane instead of pushing the status bar out of view.
 
+The preview canvas (`.grey-editor__canvas`) applies a CSS black-and-white simulation via `filter: grayscale(100%)`, while the overlay canvas remains unfiltered so crop and rotation guides stay high-contrast.
+
 **File intake**
 
 Three entry points are supported:

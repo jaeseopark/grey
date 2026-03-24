@@ -211,6 +211,10 @@
   display: block;
 }
 
+.grey-editor__canvas {
+  filter: grayscale(100%);
+}
+
 .grey-editor__overlay {
   position: absolute;
   inset: 0;
