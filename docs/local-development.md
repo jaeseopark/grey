@@ -11,6 +11,18 @@
 pnpm install
 ```
 
+This automatically installs the Git hooks defined in `.husky/` via the `prepare` lifecycle script.
+
+## Pre-push Hook
+
+A Git pre-push hook is configured via [husky](https://typicode.github.io/husky/). Before every `git push`, it runs:
+
+```sh
+pnpm ci
+```
+
+This mirrors the CI pipeline (build → lint → test) and blocks the push if any check fails.
+
 ## Start the Dev Server
 
 ```sh
@@ -48,9 +60,9 @@ Opens the demo app via Vite, typically at `http://localhost:5173`. The demo impo
 1. `pnpm install` — install all workspace dependencies
 2. `pnpm dev` — start the interactive demo
 3. Make changes to any package; Vite hot-reloads automatically
-4. `pnpm lint` — type-check all packages
-5. `pnpm test` — run Vitest unit tests across all packages
-6. `pnpm build` — verify all library bundles compile cleanly
+4. `pnpm build` — compile all library bundles (required before type-checking across packages)
+5. `pnpm lint` — type-check all packages
+6. `pnpm test` — run Vitest unit tests across all packages
 7. `pnpm preview` — validate the production-built demo
 
 ## Running E2e Tests
