@@ -205,7 +205,6 @@ class GreyEditorApp implements GreyEditorInstance {
   private readonly overlayElement: HTMLCanvasElement;
   private readonly fileInput: HTMLInputElement;
   private readonly folderInput: HTMLInputElement;
-  private readonly rotationRange: HTMLInputElement;
   private readonly rotationNumber: HTMLInputElement;
   private readonly modeRotateButton: HTMLButtonElement;
   private readonly modeCropButton: HTMLButtonElement;
@@ -263,7 +262,6 @@ class GreyEditorApp implements GreyEditorInstance {
     this.overlayElement = this.requireElement('[data-role="overlay"]');
     this.fileInput = this.requireElement('[data-role="file-input"]');
     this.folderInput = this.requireElement('[data-role="folder-input"]');
-    this.rotationRange = this.requireElement('[data-role="rotation-range"]');
     this.rotationNumber = this.requireElement('[data-role="rotation-number"]');
     this.modeRotateButton = this.requireElement('[data-role="mode-rotate"]');
     this.modeCropButton = this.requireElement('[data-role="mode-crop"]');
@@ -399,8 +397,6 @@ class GreyEditorApp implements GreyEditorInstance {
 
       this.folderInput.value = '';
     });
-    this.listen(this.rotationRange, 'input', () => this.handleRotationChange(this.rotationRange.value));
-    this.listen(this.rotationRange, 'change', () => this.applyRotationFromPreview());
     this.listen(this.rotationNumber, 'input', () => this.handleRotationChange(this.rotationNumber.value));
     this.listen(this.rotationNumber, 'change', () => this.applyRotationFromPreview());
     this.listen(this.modeRotateButton, 'click', () => {
@@ -649,7 +645,6 @@ class GreyEditorApp implements GreyEditorInstance {
       return;
     }
 
-    this.rotationRange.value = `${degrees}`;
     this.rotationNumber.value = `${degrees}`;
     this.currentRotationPreview = degrees;
     this.rotationPreviewing = true;
@@ -667,7 +662,7 @@ class GreyEditorApp implements GreyEditorInstance {
       return;
     }
 
-    const degrees = Number.parseFloat(this.rotationRange.value);
+    const degrees = Number.parseFloat(this.rotationNumber.value);
     if (Number.isNaN(degrees)) {
       return;
     }
@@ -723,7 +718,6 @@ class GreyEditorApp implements GreyEditorInstance {
     if (this.mode === 'rotate' && this.rotationDrag && activeDocument) {
       const delta = (event.clientX - this.rotationDrag.startX) * 0.7;
       const angle = Math.max(-359, Math.min(359, this.rotationDrag.startAngle + delta));
-      this.rotationRange.value = `${angle}`;
       this.rotationNumber.value = `${angle}`;
       this.currentRotationPreview = angle;
 
@@ -949,14 +943,12 @@ class GreyEditorApp implements GreyEditorInstance {
     this.cropConfirmButton.disabled = !this.cropReady;
 
     if (!activeDocument) {
-      this.rotationRange.value = '0';
       this.rotationNumber.value = '0';
       return;
     }
 
     if (!this.rotationPreviewing && !this.rotationDrag) {
       const rotation = getCurrentRotation(activeDocument.operations);
-      this.rotationRange.value = `${rotation}`;
       this.rotationNumber.value = `${rotation}`;
     }
 
@@ -1138,15 +1130,14 @@ class GreyEditorApp implements GreyEditorInstance {
             <button class="grey-editor__button" data-role="mode-crop" type="button">Crop</button>
           </div>
           <div class="grey-editor__edit-group" data-role="rotate-controls">
-            <label class="grey-editor__label" for="grey-rotation-range">Angle</label>
-            <input class="grey-editor__slider grey-editor__slider--toolbar" data-role="rotation-range" id="grey-rotation-range" max="359" min="-359" step="0.5" type="range" value="0" />
-            <input class="grey-editor__input grey-editor__input--narrow" data-role="rotation-number" max="359" min="-359" step="0.5" type="number" value="0" />
+            <label class="grey-editor__label" for="grey-rotation-number">Angle</label>
+            <input class="grey-editor__input grey-editor__input--narrow" data-role="rotation-number" id="grey-rotation-number" max="359" min="-359" step="0.5" type="number" value="0" />
             <label class="grey-editor__checkbox-label">
               <input class="grey-editor__checkbox" data-role="rotation-grid-checkbox" type="checkbox" checked /> Grid
             </label>
             <button class="grey-editor__button" data-role="reset-angle" type="button">Reset angle</button>
           </div>
-          <div class="grey-editor__edit-group" data-role="crop-controls">
+          <div class="grey-editor__edit-group" data-role="crop-controls" hidden>
             <button class="grey-editor__button grey-editor__button--accent" data-role="crop-confirm" type="button" disabled>Confirm crop</button>
             <button class="grey-editor__button" data-role="reset-crop" type="button">Reset crop</button>
           </div>
@@ -1177,7 +1168,7 @@ class GreyEditorApp implements GreyEditorInstance {
               <div class="grey-editor__field-row">
                 <label class="grey-editor__field">
                   <span>Compression / quality</span>
-                  <input class="grey-editor__input" data-role="quality-input" max="1" min="0.1" step="0.01" type="number" value="0.7" />
+                  <input class="grey-editor__input" data-role="quality-input" max="1" min="0.1" step="0.01" type="number" value="0.75" />
                 </label>
                 <label class="grey-editor__field">
                   <span>Scale factor</span>
