@@ -1,6 +1,12 @@
 import { getFormatMimeType, isTiffFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
 import type { ExportSettings, Operation } from '@grey/shared-types';
+import { encode as encodeJpeg } from '@jsquash/jpeg';
+import { init as initJpegEncoder } from '@jsquash/jpeg/encode';
+import mozjpegEncoderWasmUrl from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm?url';
 import * as UTIF from 'utif';
+
+const MOZJPEG_GRAYSCALE_COLOR_SPACE = 1;
+let jpegEncoderInitPromise: Promise<void> | null = null;
 
 export interface LoadedSource {
   bitmap: ImageBitmap;
@@ -259,16 +265,26 @@ async function encodeCanvas(canvas: OffscreenCanvas, settings: ExportSettings): 
     return new Blob([arrayBuffer], { type: 'image/tiff' });
   }
 
+  if (settings.format === 'jpeg') {
+    await ensureJpegEncoderInitialized();
+
+    const context = get2DContext(canvas);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const arrayBuffer = await encodeJpeg(imageData, {
+      quality: Math.max(1, Math.round(settings.quality * 100)),
+      color_space: MOZJPEG_GRAYSCALE_COLOR_SPACE
+    });
+
+    return new Blob([arrayBuffer], { type: getFormatMimeType(settings.format) });
+  }
+
   if (settings.format === 'png') {
     return canvas.convertToBlob({
       type: getFormatMimeType(settings.format)
     });
   }
 
-  return canvas.convertToBlob({
-    type: getFormatMimeType(settings.format),
-    quality: settings.quality
-  });
+  throw new Error(`Unsupported export format: ${settings.format}`);
 }
 
 function get2DContext(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2D {
@@ -279,4 +295,14 @@ function get2DContext(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2
   }
 
   return context;
+}
+
+async function ensureJpegEncoderInitialized(): Promise<void> {
+  if (!jpegEncoderInitPromise) {
+    jpegEncoderInitPromise = initJpegEncoder({
+      locateFile: (path: string, prefix: string) => (path.endsWith('.wasm') ? mozjpegEncoderWasmUrl : `${prefix}${path}`)
+    });
+  }
+
+  await jpegEncoderInitPromise;
 }

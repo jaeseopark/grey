@@ -112,7 +112,7 @@ $$
 Y = 0.2126 \cdot R + 0.7152 \cdot G + 0.0722 \cdot B
 $$
 
-The alpha channel is forced to 255 (fully opaque). For JPEG exports, an additional flattening step composites onto a white background to remove any residual transparency artifacts.
+The alpha channel is forced to 255 (fully opaque). For JPEG exports, an additional flattening step composites onto a white background to remove any residual transparency artifacts before MozJPEG encodes the image in grayscale color space.
 
 #### `encodeCanvas(canvas, settings)`
 
@@ -120,7 +120,7 @@ Dispatches to the appropriate encoder:
 
 | Format | Encoder |
 |---|---|
-| `jpeg` | `canvas.convertToBlob({ type: 'image/jpeg', quality: settings.quality })` |
+| `jpeg` | `@jsquash/jpeg` (MozJPEG WASM) with `color_space: GRAYSCALE` |
 | `png` | `canvas.convertToBlob({ type: 'image/png' })` |
 | `tiff` | `UTIF.encodeImage(rgba, width, height, {})` wrapped in a `Blob` |
 

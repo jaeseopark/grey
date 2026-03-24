@@ -130,7 +130,7 @@ Color space selection is **not yet exposed in the UI**. The export pipeline curr
 Y = 0.2126R + 0.7152G + 0.0722B
 ```
 
-Alpha is forced to 255 (fully opaque) in the worker. Applied unconditionally at export time in `applyColorSpace` within `packages/image-worker/src/rendering.ts`.
+Alpha is forced to 255 (fully opaque) in the worker. Applied unconditionally at export time in `applyColorSpace` within `packages/image-worker/src/rendering.ts`. JPEG exports are then encoded through MozJPEG with grayscale output enabled so the downloaded file is single-channel grayscale, not RGB pixels that merely look gray.
 
 Planned support matrix:
 
@@ -159,7 +159,7 @@ Processing order in the worker:
 2. Replay document operations in sequence (rotate → crop)
 3. Apply colour space conversion (currently always greyscale)
 4. Compute output dimensions from scale factor or long edge
-5. Encode to target format via `OffscreenCanvas.convertToBlob` (JPEG/PNG) or UTIF (TIFF)
+5. Encode to target format via MozJPEG WASM (JPEG grayscale), `OffscreenCanvas.convertToBlob` (PNG), or UTIF (TIFF)
 6. Return the `Blob` to the main thread; main thread triggers download via object URL
 
 ## Offline and Performance
