@@ -130,7 +130,9 @@ After rotation is committed, the editor schedules a worker preview rerender so t
 
 **Crop interaction**
 
-In crop mode, `pointerdown`, `pointermove`, and `pointerup` listeners on the overlay canvas track the crop rectangle. The draft is drawn on the overlay in `drawOverlay()`. Confirming with the toolbar button or keyboard shortcut calls `applyCrop()`, which reads `cropDraft`, converts coordinates from preview space to rendered-source space using the stored `renderedWidth` / `renderedHeight` ratio, and calls `appendCropOperation`.
+In crop mode, `pointerdown`, `pointermove`, and `pointerup` listeners on the overlay canvas track the crop rectangle. The draft is drawn on the overlay in `drawOverlay()`. While dragging, Grey dims the area outside the draft rectangle so the selected region is easier to read against busy backgrounds. Once the drag is released (`cropReady`), the same masked overlay remains until crop confirm/reset.
+
+Confirming with the toolbar button or keyboard shortcut calls `applyCrop()`, which reads `cropDraft`, converts coordinates from preview space to rendered-source space using the stored `renderedWidth` / `renderedHeight` ratio, and calls `appendCropOperation`.
 
 Crop pointer coordinates are not clamped to the visible canvas bounds, so users can drag past the current image edge to create a larger crop region.
 
