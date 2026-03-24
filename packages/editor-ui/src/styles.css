@@ -214,6 +214,10 @@
   background: #ffffff;
 }
 
+.grey-editor__canvas-stack[hidden] {
+  display: none;
+}
+
 .grey-editor__canvas,
 .grey-editor__overlay {
   display: block;
