@@ -8,7 +8,7 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "preview": "pnpm --filter @grey/demo preview",
-    "ci": "pnpm lint && pnpm test && pnpm build",
+    "ci": "pnpm build && pnpm lint && pnpm test",
     "test:e2e": "playwright test",
     "release:check": "pnpm ci",
     "release:publish": "pnpm -r --filter ./packages/* publish --access public --no-git-checks",
