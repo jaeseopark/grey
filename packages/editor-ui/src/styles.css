@@ -50,21 +50,6 @@
   border-bottom: 1px solid var(--grey-border);
 }
 
-.grey-editor__brand {
-  margin-right: auto;
-}
-
-.grey-editor__brand-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.grey-editor__brand-subtitle {
-  font-size: 0.82rem;
-  color: var(--grey-muted);
-}
-
 .grey-editor__button,
 .grey-editor__tab,
 .grey-editor__save-button {
@@ -455,10 +440,6 @@
 @media (max-width: 720px) {
   .grey-editor__toolbar {
     flex-wrap: wrap;
-  }
-
-  .grey-editor__brand {
-    width: 100%;
   }
 
   .grey-editor__field-row {

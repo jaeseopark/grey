@@ -1180,10 +1180,6 @@ class GreyEditorApp implements GreyEditorInstance {
   private renderShell(): string {
     return `
       <div class="grey-editor__toolbar">
-        <div class="grey-editor__brand">
-          <div class="grey-editor__brand-title">Grey Editor</div>
-          <div class="grey-editor__brand-subtitle">Local-first scan cleanup for skew, crop, and export.</div>
-        </div>
         <input data-role="file-input" hidden type="file" />
         <input data-role="folder-input" hidden type="file" />
       </div>
