@@ -11,6 +11,18 @@
 pnpm install
 ```
 
+This automatically installs the Git hooks defined in `.husky/` via the `prepare` lifecycle script.
+
+## Pre-push Hook
+
+A Git pre-push hook is configured via [husky](https://typicode.github.io/husky/). Before every `git push`, it runs:
+
+```sh
+pnpm ci
+```
+
+This mirrors the CI pipeline (lint → test → build) and blocks the push if any check fails.
+
 ## Start the Dev Server
 
 ```sh
