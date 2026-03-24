@@ -160,6 +160,12 @@
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.grey-editor__tab-name {
+  pointer-events: none;
 }
 
 .grey-editor__tab.is-active {

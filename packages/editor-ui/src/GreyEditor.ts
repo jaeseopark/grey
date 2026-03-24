@@ -879,7 +879,7 @@ class GreyEditorApp implements GreyEditorInstance {
 
         return `
           <div class="${classes.join(' ')}" data-role="tab" data-document-id="${escapeHtml(documentRecord.id)}">
-            <button class="grey-editor__button grey-editor__button--ghost" data-role="tab-label" type="button">${escapeHtml(documentRecord.name)}</button>
+            <span class="grey-editor__tab-name">${escapeHtml(documentRecord.name)}</span>
             <button class="grey-editor__tab-close" data-role="close-tab" data-document-id="${escapeHtml(documentRecord.id)}" type="button">×</button>
           </div>
         `;
