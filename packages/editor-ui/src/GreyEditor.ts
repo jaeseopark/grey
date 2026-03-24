@@ -1099,23 +1099,29 @@ class GreyEditorApp implements GreyEditorInstance {
       const h = this.overlayElement.height;
       context.save();
 
+      // Dim the non-selected area for both draft and ready states.
+      context.fillStyle = this.cropReady ? 'rgba(0, 0, 0, 0.55)' : 'rgba(0, 0, 0, 0.45)';
+      context.fillRect(0, 0, w, h);
+      context.globalCompositeOperation = 'destination-out';
+      context.fillStyle = 'rgba(0, 0, 0, 1)';
+      context.fillRect(rect.x, rect.y, rect.width, rect.height);
+      context.globalCompositeOperation = 'source-over';
+
       if (this.cropReady) {
-        // Photoshop-style: fill everything dark, then cut out the selected area
-        context.fillStyle = 'rgba(0, 0, 0, 0.55)';
-        context.fillRect(0, 0, w, h);
-        context.globalCompositeOperation = 'destination-out';
-        context.fillStyle = 'rgba(0, 0, 0, 1)';
-        context.fillRect(rect.x, rect.y, rect.width, rect.height);
-        context.globalCompositeOperation = 'source-over';
         context.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        context.lineWidth = 1.5;
+        context.lineWidth = 1.8;
         context.setLineDash([]);
         context.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.width - 1, rect.height - 1);
       } else {
-        // Drafting: dashed selection outline only
-        context.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        context.lineWidth = 1.5;
+        context.strokeStyle = 'rgba(255, 255, 255, 0.96)';
+        context.lineWidth = 1.8;
         context.setLineDash([8, 5]);
+        context.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.width - 1, rect.height - 1);
+
+        // Add a subtle dark edge under the dashed line so the boundary stays visible on bright images.
+        context.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+        context.lineWidth = 1;
+        context.setLineDash([]);
         context.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.width - 1, rect.height - 1);
       }
 
