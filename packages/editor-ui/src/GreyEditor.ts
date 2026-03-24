@@ -293,6 +293,13 @@ class GreyEditorApp implements GreyEditorInstance {
 
     this.attachEvents();
     this.render();
+
+    const initialHeight = getComputedStyle(this.mountTarget).height;
+    if (initialHeight && initialHeight !== '0px') {
+      this.mountTarget.style.minHeight = initialHeight;
+      this.mountTarget.style.maxHeight = initialHeight;
+      this.mountTarget.style.overflow = 'hidden';
+    }
   }
 
   destroy(): void {
