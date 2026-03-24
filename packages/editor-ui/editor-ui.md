@@ -106,6 +106,8 @@ The editor renders a fixed HTML shell (`renderShell()`) with `data-role` attribu
 - `edit-fieldset` / `save-fieldset` — sidebar panels for editing controls and export settings
 - `rotate-controls` / `crop-controls` — mode-specific control groups within the edit fieldset
 
+The shell is laid out as a five-row grid: top toolbar, tabs, edit toolbar, workspace, and status bar. The workspace row is the only flexible track (`minmax(0, 1fr)`), so zoomed canvases scroll inside the canvas pane instead of pushing the status bar out of view.
+
 **File intake**
 
 Three entry points are supported:
