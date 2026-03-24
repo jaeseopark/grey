@@ -51,11 +51,11 @@ body {
 }
 
 .demo-editor-panel {
-  min-height: 780px;
+  height: 780px;
 }
 
 #grey-editor {
-  min-height: 780px;
+  height: 780px;
 }
 
 @media (max-width: 720px) {
@@ -65,6 +65,6 @@ body {
 
   .demo-editor-panel,
   #grey-editor {
-    min-height: 680px;
+    height: 680px;
   }
 }
