@@ -816,6 +816,8 @@ class GreyEditorApp implements GreyEditorInstance {
 
     pane.scrollLeft = (oldScrollLeft + mouseInPaneX) * ratio - mouseInPaneX;
     pane.scrollTop = (oldScrollTop + mouseInPaneY) * ratio - mouseInPaneY;
+
+    this.drawOverlay();
   }
 
   private applyCrop(): void {    const documentRecord = this.getActiveDocumentInternal();
@@ -1042,13 +1044,14 @@ class GreyEditorApp implements GreyEditorInstance {
     context.clearRect(0, 0, this.overlayElement.width, this.overlayElement.height);
 
     if (this.mode === 'rotate' && this.rotationGrid) {
-      const spacing = 24;
+      const z = this.zoomLevel;
+      const spacing = 24 / z;
       const width = this.overlayElement.width;
       const height = this.overlayElement.height;
 
       context.save();
-      context.lineWidth = 1.2;
-      context.setLineDash([6, 5]);
+      context.lineWidth = 1.2 / z;
+      context.setLineDash([6 / z, 5 / z]);
       context.strokeStyle = 'rgba(0, 0, 0, 0.42)';
 
       for (let x = 0; x <= width; x += spacing) {
@@ -1067,7 +1070,7 @@ class GreyEditorApp implements GreyEditorInstance {
 
       context.setLineDash([]);
       context.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      context.lineWidth = 2.2;
+      context.lineWidth = 2.2 / z;
       const centerX = width / 2;
       const centerY = height / 2;
       context.beginPath();
@@ -1079,9 +1082,9 @@ class GreyEditorApp implements GreyEditorInstance {
 
       context.fillStyle = 'rgba(255, 255, 255, 0.95)';
       context.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-      context.lineWidth = 1;
+      context.lineWidth = 1 / z;
       context.beginPath();
-      context.arc(centerX, centerY, 4, 0, Math.PI * 2);
+      context.arc(centerX, centerY, 4 / z, 0, Math.PI * 2);
       context.fill();
       context.stroke();
 

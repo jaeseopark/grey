@@ -136,7 +136,7 @@ Pressing save (button or Cmd/Ctrl+S) swaps the sidebar from `edit-fieldset` to `
 
 **Zoom interaction**
 
-Scrolling the mouse wheel over the canvas pane zooms in (scroll up) or out (scroll down) by a factor of 1.1 per step, clamped to a range of 0.1×–8×. Zoom only affects the CSS display size — the canvas drawing buffer stays at `previewWidth × previewHeight` and `getCanvasPoint` automatically compensates via `getBoundingClientRect`, so crop and rotation coordinates remain accurate at any zoom level. The scroll position is adjusted after each zoom step so the point under the cursor stays fixed (zoom-to-cursor). `zoomLevel` is reset to `1.0` whenever a new document is opened or the active tab changes.
+Scrolling the mouse wheel over the canvas pane zooms in (scroll up) or out (scroll down) by a factor of 1.1 per step, clamped to a range of 0.1×–8×. Zoom only affects the CSS display size — the canvas drawing buffer stays at `previewWidth × previewHeight` and `getCanvasPoint` automatically compensates via `getBoundingClientRect`, so crop and rotation coordinates remain accurate at any zoom level. The scroll position is adjusted after each zoom step so the point under the cursor stays fixed (zoom-to-cursor). `zoomLevel` is reset to `1.0` whenever a new document is opened or the active tab changes. After each zoom step `drawOverlay` is called so the rotation grid re-renders; all pixel-space drawing constants (spacing, line widths, dash lengths, crosshair dot radius) are divided by `zoomLevel` so the grid appears at a consistent physical size regardless of zoom.
 
 **Keyboard shortcuts**
 
