@@ -2,7 +2,9 @@
 
 `@grey/editor-ui` is the main publishable package for Grey. It mounts a self-contained image editor into a host DOM element, manages all UI state, communicates with the image worker via `GreyWorkerClient`, and exposes a small public API to host applications.
 
-## Public API
+## Usage
+
+### ES Module (npm / bundler)
 
 ```ts
 import { createGreyEditor } from '@grey/editor-ui';
@@ -13,6 +15,25 @@ const editor = createGreyEditor({
   maxParallelDecodes: 2,
 });
 ```
+
+### IIFE (single `<script>` tag)
+
+The package ships a self-contained IIFE build at `dist/grey-editor.iife.js`. The worker and CSS are both bundled inside the file — no extra assets are required.
+
+```html
+<script src="grey-editor.iife.js"></script>
+<script>
+  const editor = GreyEditor.createGreyEditor({ target: '#grey-editor' });
+</script>
+```
+
+This file is also served via the `unpkg` field in `package.json`, so it can be referenced from a CDN:
+
+```html
+<script src="https://unpkg.com/@grey/editor-ui/dist/grey-editor.iife.js"></script>
+```
+
+## Public API
 
 ### `createGreyEditor(options): GreyEditorInstance`
 
@@ -47,7 +68,7 @@ The core implementation file. Contains three main classes and the exported facto
 
 Manages the lifecycle of a single `Worker` instance and serialises all requests to it via a promise map keyed by an auto-incrementing `requestId`.
 
-- **Constructor** — instantiates `grey.worker.ts` as a module worker and registers a `message` listener that resolves or rejects pending promises.
+- **Constructor** — instantiates `grey.worker.ts` using Vite's `?worker&inline` import, which embeds the compiled worker as a base64 `Blob` URL so no separate worker file is emitted. Registers a `message` listener that resolves or rejects pending promises.
 - **`loadDocument(documentId, file)`** — reads the file into an `ArrayBuffer` (transferred, not copied) and sends a `load-document` request.
 - **`renderPreview(documentId, operations, previewMaxEdge)`** — sends a `render-preview` request and tracks the latest `requestId` in `lastRenderPreviewRequestId` so stale responses can be detected.
 - **`exportDocument(documentId, fileName, operations, settings)`** — sends an `export-document` request.
