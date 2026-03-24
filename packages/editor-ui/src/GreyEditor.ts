@@ -227,7 +227,7 @@ class GreyEditorApp implements GreyEditorInstance {
 
   private activeDocumentId: string | null = null;
   private mode: 'rotate' | 'crop' = 'rotate';
-  private rotationDrag: { startX: number; startAngle: number } | null = null;
+  private rotationDrag: { startMouseAngle: number; startAngle: number; canvasCenterX: number; canvasCenterY: number } | null = null;
   private rotationPreviewing = false;
   private currentRotationPreview = 0;
   private rotationGrid = true;
@@ -702,9 +702,15 @@ class GreyEditorApp implements GreyEditorInstance {
     }
 
     if (this.mode === 'rotate') {
+      const canvasRect = this.canvasElement.getBoundingClientRect();
+      const canvasCenterX = canvasRect.left + canvasRect.width / 2;
+      const canvasCenterY = canvasRect.top + canvasRect.height / 2;
+      const startMouseAngle = this.getMouseAngleFromCanvasCenter(event, { x: canvasCenterX, y: canvasCenterY });
       this.rotationDrag = {
-        startX: event.clientX,
-        startAngle: getCurrentRotation(activeDocument.operations)
+        startMouseAngle,
+        startAngle: getCurrentRotation(activeDocument.operations),
+        canvasCenterX,
+        canvasCenterY
       };
 
       this.currentRotationPreview = getCurrentRotation(activeDocument.operations);
@@ -733,7 +739,8 @@ class GreyEditorApp implements GreyEditorInstance {
     const activeDocument = this.getActiveDocumentInternal();
 
     if (this.mode === 'rotate' && this.rotationDrag && activeDocument) {
-      const delta = (event.clientX - this.rotationDrag.startX) * 0.7;
+      const currentMouseAngle = this.getMouseAngleFromCanvasCenter(event, { x: this.rotationDrag.canvasCenterX, y: this.rotationDrag.canvasCenterY });
+      const delta = currentMouseAngle - this.rotationDrag.startMouseAngle;
       const angle = Math.max(-359, Math.min(359, this.rotationDrag.startAngle + delta));
       this.rotationNumber.value = `${angle}`;
       this.currentRotationPreview = angle;
@@ -1134,6 +1141,20 @@ class GreyEditorApp implements GreyEditorInstance {
     this.canvasElement.height = 0;
     this.overlayElement.width = 0;
     this.overlayElement.height = 0;
+  }
+
+  private getMouseAngleFromCanvasCenter(event: PointerEvent, center?: { x: number; y: number }): number {
+    let centerX: number;
+    let centerY: number;
+    if (center) {
+      centerX = center.x;
+      centerY = center.y;
+    } else {
+      const rect = this.canvasElement.getBoundingClientRect();
+      centerX = rect.left + rect.width / 2;
+      centerY = rect.top + rect.height / 2;
+    }
+    return Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI);
   }
 
   private getCanvasPoint(event: PointerEvent): { x: number; y: number } {

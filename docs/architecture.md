@@ -109,7 +109,7 @@ $$rotatedHeight = |w \sin\theta| + |h \cos\theta|$$
 UI controls in rotate mode:
 
 * **Angle number input** — type a value directly (−359 to 359, step 0.5)
-* **Canvas drag** — click and drag horizontally on the canvas to rotate (0.7°/px scaling)
+* **Canvas drag** — click and drag on the canvas to rotate; the angle is computed from the mouse cursor's position relative to the center of the image
 * **Grid toggle** — shows/hides the dashed alignment grid overlay
 * **Reset angle** — sets rotation back to 0 and triggers a re-render
 
