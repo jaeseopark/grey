@@ -11,7 +11,6 @@ Grey is designed to support:
 * mounting into a host page using a supplied DOM element
 * drag-and-drop or browse-based file opening
 * multiple open documents with tabbed navigation
-* JPEG, PNG, and TIFF-oriented workflows
 * offline-only operation with no remote processing
 * non-destructive document transforms
 * configurable export settings and browser downloads
@@ -124,11 +123,9 @@ Current implementation includes:
 * mountable editor API via `createGreyEditor`
 * multi-file tabs with drag-and-drop and browse flows
 * folder import through folder selection and best-effort dropped-directory traversal
-* JPEG, PNG, and TIFF decode support
 * live rotation preview with padded canvas bounds
 * repeated non-destructive crop operations
 * save dialog with format, quality, colour space, scale, and long-edge settings
-* browser download export for JPEG, PNG, and TIFF
 * worker-based rendering and export pipeline
 
 ## Package Entry Points
