@@ -126,9 +126,13 @@ Two input mechanisms update the rotation angle:
 - **Number input** — directly sets the angle via `handleRotationChange`, triggers a CSS-transform live preview on the canvas element before committing.
 - **Canvas drag** — `pointerdown` on the canvas in rotate mode begins a drag; horizontal pointer delta is converted to degrees (1 px ≈ 0.25°). The CSS transform is applied in real time via `setRotationPreview(degrees)`, and committed to the operations list on `pointerup` via `applyRotationFromPreview()`.
 
+After rotation is committed, the editor schedules a worker preview rerender so the displayed canvas dimensions update to the rotated image bounds (including protruding corners).
+
 **Crop interaction**
 
 In crop mode, `pointerdown`, `pointermove`, and `pointerup` listeners on the overlay canvas track the crop rectangle. The draft is drawn on the overlay in `drawOverlay()`. Confirming with the toolbar button or keyboard shortcut calls `applyCrop()`, which reads `cropDraft`, converts coordinates from preview space to rendered-source space using the stored `renderedWidth` / `renderedHeight` ratio, and calls `appendCropOperation`.
+
+Crop pointer coordinates are not clamped to the visible canvas bounds, so users can drag past the current image edge to create a larger crop region.
 
 **Export / save**
 

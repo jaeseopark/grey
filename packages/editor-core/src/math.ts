@@ -22,11 +22,11 @@ export function calculateRotatedBounds(width: number, height: number, degrees: n
   };
 }
 
-export function normalizeCropRect(rect: CropRect, boundsWidth: number, boundsHeight: number): CropRect {
-  const x1 = clamp(Math.min(rect.x, rect.x + rect.width), 0, boundsWidth);
-  const y1 = clamp(Math.min(rect.y, rect.y + rect.height), 0, boundsHeight);
-  const x2 = clamp(Math.max(rect.x, rect.x + rect.width), 0, boundsWidth);
-  const y2 = clamp(Math.max(rect.y, rect.y + rect.height), 0, boundsHeight);
+export function normalizeCropRect(rect: CropRect): CropRect {
+  const x1 = Math.min(rect.x, rect.x + rect.width);
+  const y1 = Math.min(rect.y, rect.y + rect.height);
+  const x2 = Math.max(rect.x, rect.x + rect.width);
+  const y2 = Math.max(rect.y, rect.y + rect.height);
 
   return {
     x: Math.floor(x1),

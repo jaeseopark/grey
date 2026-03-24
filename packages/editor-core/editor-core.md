@@ -44,7 +44,9 @@ ops = setTrailingRotationOperation(ops, 30);
 
 #### `appendCropOperation(operations, rect, currentWidth, currentHeight)`
 
-Appends a `CropOperation` to the operations list. The supplied rect is normalized (clamped to canvas bounds, negative dimensions corrected) via `normalizeCropRect` before being stored.
+Appends a `CropOperation` to the operations list. The supplied rect is normalized (negative dimensions corrected, integer pixel coordinates) via `normalizeCropRect` before being stored.
+
+Crop operations are intentionally **not clamped** to current canvas bounds. This allows selecting crop regions that extend outside the current image and lets downstream rendering grow the output canvas when needed.
 
 #### `updateExportSettings(document, settings)`
 
@@ -110,9 +112,11 @@ $$
 
 Results are rounded up to the nearest integer with a minimum of 1. This is used by the worker's `rotateCanvas` function to size the output canvas and to display preview dimensions on the main thread.
 
-#### `normalizeCropRect(rect, boundsWidth, boundsHeight)`
+#### `normalizeCropRect(rect)`
 
-Normalizes a `CropRect` that may have been drawn in either direction (negative width/height). Clamps all edges to the canvas bounds and floors coordinates to integer pixels. Ensures a minimum dimension of 1 in each axis.
+Normalizes a `CropRect` that may have been drawn in either direction (negative width/height). Floors coordinates to integer pixels and ensures a minimum dimension of 1 in each axis.
+
+Coordinates are preserved even when they are outside image bounds, so crop operations can request larger output canvases with padded areas.
 
 #### `resolveScale(width, height, settings)`
 
