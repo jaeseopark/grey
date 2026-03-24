@@ -8,6 +8,7 @@ import {
   setTrailingRotationOperation,
   updateExportSettings
 } from '@grey/editor-core';
+import GreyWorkerConstructor from './grey.worker.ts?worker&inline';
 import type {
   CropRect,
   DocumentExportedResponse,
@@ -73,7 +74,7 @@ class GreyWorkerClient {
   public lastRenderPreviewRequestId = 0;
 
   constructor() {
-    this.worker = new Worker(new URL('./grey.worker.ts', import.meta.url), { type: 'module' });
+    this.worker = new GreyWorkerConstructor();
     this.worker.addEventListener('message', (event: MessageEvent<WorkerResponse>) => {
       const response = event.data;
       const pendingRequest = this.pending.get(response.requestId);

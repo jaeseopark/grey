@@ -30,8 +30,8 @@ grey/
 
 | Package | Published |
 |---|---|
-| `packages/editor-ui` | Yes — public package, includes type declarations and worker references |
+| `packages/editor-ui` | Yes — public package, ships both ES module (`grey-editor.js`) and IIFE (`grey-editor.iife.js`) with all internals, worker, and CSS fully bundled |
 | `packages/editor-core` | Optional — publish if intended as a standalone dependency |
-| `packages/image-worker` | No — bundled through `editor-ui` |
+| `packages/image-worker` | No — bundled into `editor-ui` |
 | `packages/shared-types` | Optional — only if consumers need the raw types |
 | `apps/demo` | No — private, never published |

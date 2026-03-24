@@ -16,6 +16,7 @@
 * **TIFF decode/encode:** `utif` — handles both directions; used directly in the worker
 * **Resize:** browser `imageSmoothingQuality: 'high'` on `OffscreenCanvas` — sufficient for current use; no third-party resize library
 * **No canvas abstraction framework** — the transform pipeline is custom throughout
+* **CSS injection:** `vite-plugin-css-injected-by-js` — inlines the editor stylesheet into the JS bundle so the IIFE output is truly self-contained (no separate `.css` file emitted)
 
 ## Rationale
 
