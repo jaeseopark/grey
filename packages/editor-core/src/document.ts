@@ -1,10 +1,10 @@
 import type { CropRect, ExportFormat, ExportSettings, GreyDocumentRecord, Operation } from '@grey/shared-types';
 import { normalizeCropRect } from './math';
 
-export function createDefaultExportSettings(format: ExportFormat = 'png'): ExportSettings {
+export function createDefaultExportSettings(format: ExportFormat = 'jpeg'): ExportSettings {
   return {
     format,
-    quality: 0.92,
+    quality: 0.75,
     scale: 1,
     longEdge: null
   };
