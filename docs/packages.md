@@ -18,13 +18,13 @@ grey/
 
 ## Package Responsibilities
 
-| Package | Responsibility |
-|---|---|
-| `packages/editor-core` | Document state, operation reducers, export setting normalisation, bounding box math, file type helpers |
-| `packages/editor-ui` | Public `createGreyEditor` API, `GreyEditorApp` class, all DOM/canvas UI, toolbar, tabs, sidebar, keyboard shortcuts |
-| `packages/image-worker` | All pixel work: decode (JPEG/PNG/TIFF), rotate, crop, grayscale, scale, encode — runs fully off-thread in a Web Worker |
-| `packages/shared-types` | Shared TypeScript interfaces for `GreyDocumentRecord`, `Operation`, `ExportSettings`, and all worker request/response message types |
-| `apps/demo` | Vite dev app that imports local workspace packages for interactive testing; never published |
+| Package | Responsibility | Implementation |
+|---|---|---|
+| `packages/editor-core` | Document state, operation reducers, export setting normalisation, bounding box math, file type helpers | [editor-core.md](../packages/editor-core/editor-core.md) |
+| `packages/editor-ui` | Public `createGreyEditor` API, `GreyEditorApp` class, all DOM/canvas UI, toolbar, tabs, sidebar, keyboard shortcuts | [editor-ui.md](../packages/editor-ui/editor-ui.md) |
+| `packages/image-worker` | All pixel work: decode (JPEG/PNG/TIFF), rotate, crop, grayscale, scale, encode — runs fully off-thread in a Web Worker | [image-worker.md](../packages/image-worker/image-worker.md) |
+| `packages/shared-types` | Shared TypeScript interfaces for `GreyDocumentRecord`, `Operation`, `ExportSettings`, and all worker request/response message types | [shared-types.md](../packages/shared-types/shared-types.md) |
+| `apps/demo` | Vite dev app that imports local workspace packages for interactive testing; never published | — |
 
 ## Publish Policy
 
