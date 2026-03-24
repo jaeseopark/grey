@@ -15,7 +15,8 @@
   --grey-grid-a: rgba(63, 54, 41, 0.08);
   --grey-grid-b: rgba(63, 54, 41, 0.03);
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  height: 100%;
   min-height: 760px;
   background:
     radial-gradient(circle at top left, rgba(255, 241, 220, 0.9), transparent 34%),
@@ -188,6 +189,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .grey-editor__canvas-pane {
