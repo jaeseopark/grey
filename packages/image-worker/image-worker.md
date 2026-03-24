@@ -92,7 +92,9 @@ Returns an `OffscreenCanvas` at the final rendered dimensions.
 
 #### `cropCanvas(sourceCanvas, rect)`
 
-Normalizes the crop rectangle via `normalizeCropRect` (from `@grey/editor-core`), creates a new `OffscreenCanvas` at the crop dimensions, and copies the selected region using `context.drawImage` with source and destination rectangles.
+Normalizes the crop rectangle via `normalizeCropRect` (from `@grey/editor-core`), creates a new `OffscreenCanvas` at the crop dimensions, and fills the canvas white.
+
+If the crop rectangle extends outside the source image, the worker copies only the overlapping source region and offsets it into the destination canvas. Non-overlapping regions remain white, which effectively allows crop operations to increase canvas size.
 
 #### `scaleCanvasToEdge(sourceCanvas, maxEdge)`
 

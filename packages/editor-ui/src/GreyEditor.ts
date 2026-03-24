@@ -688,6 +688,7 @@ class GreyEditorApp implements GreyEditorInstance {
     this.rotationPreviewing = false;
     this.currentRotationPreview = degrees;
     this.canvasElement.style.transform = '';
+    this.schedulePreview(activeDocument.id);
     this.drawOverlay();
     this.renderSidebar();
     this.render();
@@ -756,9 +757,10 @@ class GreyEditorApp implements GreyEditorInstance {
     if (this.mode === 'rotate') {
       const activeDocument = this.getActiveDocumentInternal();
 
-      if (activeDocument && !Number.isNaN(this.currentRotationPreview)) {
+      if (activeDocument && this.rotationDrag && !Number.isNaN(this.currentRotationPreview)) {
         activeDocument.operations = setTrailingRotationOperation(activeDocument.operations, this.currentRotationPreview);
         activeDocument.dirty = true;
+        this.schedulePreview(activeDocument.id);
       }
 
       this.rotationDrag = null;
@@ -1132,8 +1134,8 @@ class GreyEditorApp implements GreyEditorInstance {
     const rect = this.overlayElement.getBoundingClientRect();
 
     return {
-      x: Math.max(0, Math.min(this.overlayElement.width, (event.clientX - rect.left) / this.zoomLevel)),
-      y: Math.max(0, Math.min(this.overlayElement.height, (event.clientY - rect.top) / this.zoomLevel))
+      x: (event.clientX - rect.left) / this.zoomLevel,
+      y: (event.clientY - rect.top) / this.zoomLevel
     };
   }
 

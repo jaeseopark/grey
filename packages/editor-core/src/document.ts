@@ -45,10 +45,10 @@ export function setTrailingRotationOperation(operations: Operation[], degrees: n
 export function appendCropOperation(
   operations: Operation[],
   rect: CropRect,
-  currentWidth: number,
-  currentHeight: number
+  _currentWidth: number,
+  _currentHeight: number
 ): Operation[] {
-  return [...operations, { kind: 'crop', rect: normalizeCropRect(rect, currentWidth, currentHeight) }];
+  return [...operations, { kind: 'crop', rect: normalizeCropRect(rect) }];
 }
 
 export function updateExportSettings(document: GreyDocumentRecord, settings: Partial<ExportSettings>): GreyDocumentRecord {

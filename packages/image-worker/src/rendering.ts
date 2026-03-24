@@ -156,20 +156,37 @@ function rotateCanvas(sourceCanvas: OffscreenCanvas, degrees: number): Offscreen
 }
 
 function cropCanvas(sourceCanvas: OffscreenCanvas, rect: { x: number; y: number; width: number; height: number }): OffscreenCanvas {
-  const normalized = normalizeCropRect(rect, sourceCanvas.width, sourceCanvas.height);
+  const normalized = normalizeCropRect(rect);
   const canvas = new OffscreenCanvas(normalized.width, normalized.height);
   const context = get2DContext(canvas);
 
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, normalized.width, normalized.height);
+
+  const sourceX = Math.max(0, normalized.x);
+  const sourceY = Math.max(0, normalized.y);
+  const sourceRight = Math.min(sourceCanvas.width, normalized.x + normalized.width);
+  const sourceBottom = Math.min(sourceCanvas.height, normalized.y + normalized.height);
+  const sourceWidth = Math.max(0, sourceRight - sourceX);
+  const sourceHeight = Math.max(0, sourceBottom - sourceY);
+
+  if (sourceWidth === 0 || sourceHeight === 0) {
+    return canvas;
+  }
+
+  const destinationX = sourceX - normalized.x;
+  const destinationY = sourceY - normalized.y;
+
   context.drawImage(
     sourceCanvas,
-    normalized.x,
-    normalized.y,
-    normalized.width,
-    normalized.height,
-    0,
-    0,
-    normalized.width,
-    normalized.height
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+    destinationX,
+    destinationY,
+    sourceWidth,
+    sourceHeight
   );
 
   return canvas;
