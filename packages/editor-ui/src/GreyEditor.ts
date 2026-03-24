@@ -947,14 +947,6 @@ class GreyEditorApp implements GreyEditorInstance {
     if (!activeDocument || !activeDocument.previewBitmap) {
       this.canvasStackElement.hidden = true;
       this.emptyElement.hidden = false;
-      this.emptyElement.innerHTML = `
-        <h3>Drop scans here</h3>
-        <p>
-          Browse for JPEG, PNG, or TIFF files, or drop a folder of scans. Grey keeps editing local,
-          with live preview for rotation, crop, and export settings.
-        </p>
-        <button class="grey-editor__button" data-role="open" type="button">Open files</button>
-      `;
       this.clearCanvas();
       return;
     }
@@ -1206,7 +1198,14 @@ class GreyEditorApp implements GreyEditorInstance {
       </div>
       <div class="grey-editor__workspace">
         <div class="grey-editor__canvas-pane grey-editor__dropzone" data-role="dropzone">
-          <div class="grey-editor__empty" data-role="empty"></div>
+          <div class="grey-editor__empty" data-role="empty">
+            <h3>Drop scans here</h3>
+            <p>
+              Browse for JPEG, PNG, or TIFF files, or drop a folder of scans. Grey keeps editing local,
+              with live preview for rotation, crop, and export settings.
+            </p>
+            <button class="grey-editor__button" data-role="open" type="button">Open files</button>
+          </div>
           <div class="grey-editor__canvas-stack" data-role="canvas-stack" hidden>
             <canvas class="grey-editor__canvas" data-role="canvas"></canvas>
             <canvas class="grey-editor__overlay" data-role="overlay"></canvas>
