@@ -79,8 +79,21 @@ Iterates the `Operation[]` list in order and applies each to the running canvas:
 
 - `rotate` → `rotateCanvas`
 - `crop` → `cropCanvas`
+- `level` → `applyLevels`
 
 Returns an `OffscreenCanvas` at the final rendered dimensions.
+
+#### `applyLevels(sourceCanvas, input)`
+
+Applies Photoshop-style input levels adjustment per channel using the black point, white point, and gamma (`midtone`) controls:
+
+1. Normalize and clamp `blackPoint`, `whitePoint`, and `gamma`
+2. Remap each channel to the normalized range: `(value - blackPoint) / (whitePoint - blackPoint)`
+3. Clamp to `[0, 1]`
+4. Apply gamma curve via `pow(normalized, gamma)`
+5. Scale back to `0..255`
+
+This runs during both preview rendering and export rendering, before grayscale conversion.
 
 #### `rotateCanvas(sourceCanvas, degrees)`
 

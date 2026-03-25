@@ -27,12 +27,18 @@ interface CropRect {
 
 A rectangle in the coordinate space of the canvas at the time the crop was applied. Stored un-normalized in the operations list; normalization is applied lazily when the worker processes the operation.
 
-#### `RotateOperation` / `CropOperation` / `Operation`
+#### `RotateOperation` / `CropOperation` / `LevelOperation` / `Operation`
 
 ```ts
 interface RotateOperation { kind: 'rotate'; degrees: number; }
 interface CropOperation  { kind: 'crop';   rect: CropRect;  }
-type Operation = RotateOperation | CropOperation;
+interface LevelsInput {
+  blackPoint: number;
+  whitePoint: number;
+  gamma: number;
+}
+interface LevelOperation { kind: 'level'; input: LevelsInput; }
+type Operation = RotateOperation | CropOperation | LevelOperation;
 ```
 
 A discriminated union of all supported edit operations. Operations are append-only and applied in order.

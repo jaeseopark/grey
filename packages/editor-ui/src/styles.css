@@ -141,6 +141,12 @@
   border-left: 1px solid var(--grey-border);
 }
 
+.grey-editor__level-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .grey-editor__tab {
   display: inline-flex;
   align-items: center;

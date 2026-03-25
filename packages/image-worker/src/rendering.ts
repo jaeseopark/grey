@@ -1,5 +1,5 @@
-import { getFormatMimeType, isTiffFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
-import type { ExportSettings, Operation } from '@grey/shared-types';
+import { clamp, getFormatMimeType, isTiffFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
+import type { ExportSettings, LevelsInput, Operation } from '@grey/shared-types';
 import { encode as encodeJpeg } from '@jsquash/jpeg';
 import { init as initJpegEncoder } from '@jsquash/jpeg/encode';
 import mozjpegEncoderWasmUrl from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm?url';
@@ -127,6 +127,11 @@ function renderOperations(source: LoadedSource, operations: Operation[]): Offscr
 
     if (operation.kind === 'crop') {
       canvas = cropCanvas(canvas, operation.rect);
+      continue;
+    }
+
+    if (operation.kind === 'level') {
+      canvas = applyLevels(canvas, operation.input);
     }
   }
 
@@ -221,6 +226,42 @@ function cloneCanvas(sourceCanvas: OffscreenCanvas): OffscreenCanvas {
   const context = get2DContext(canvas);
   context.drawImage(sourceCanvas, 0, 0);
   return canvas;
+}
+
+function applyLevels(sourceCanvas: OffscreenCanvas, input: LevelsInput): OffscreenCanvas {
+  const canvas = cloneCanvas(sourceCanvas);
+  const context = get2DContext(canvas);
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const { data } = imageData;
+  const normalized = normalizeLevelsInput(input);
+  const span = Math.max(1, normalized.whitePoint - normalized.blackPoint);
+
+  for (let index = 0; index < data.length; index += 4) {
+    data[index] = remapLevelValue(data[index] ?? 0, normalized.blackPoint, span, normalized.gamma);
+    data[index + 1] = remapLevelValue(data[index + 1] ?? 0, normalized.blackPoint, span, normalized.gamma);
+    data[index + 2] = remapLevelValue(data[index + 2] ?? 0, normalized.blackPoint, span, normalized.gamma);
+  }
+
+  context.putImageData(imageData, 0, 0);
+  return canvas;
+}
+
+function remapLevelValue(value: number, blackPoint: number, span: number, gamma: number): number {
+  const normalized = clamp((value - blackPoint) / span, 0, 1);
+  const gammaAdjusted = Math.pow(normalized, gamma);
+  return Math.round(gammaAdjusted * 255);
+}
+
+function normalizeLevelsInput(input: LevelsInput): LevelsInput {
+  const blackPoint = Math.round(clamp(input.blackPoint, 0, 254));
+  const whitePoint = Math.round(clamp(input.whitePoint, blackPoint + 1, 255));
+  const gamma = Math.round(clamp(input.gamma, 0.1, 9.99) * 100) / 100;
+
+  return {
+    blackPoint,
+    whitePoint,
+    gamma
+  };
 }
 
 function applyColorSpace(sourceCanvas: OffscreenCanvas, settings: ExportSettings): OffscreenCanvas {

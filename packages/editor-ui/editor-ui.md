@@ -86,7 +86,7 @@ Implements `GreyEditorInstance`. Owns the entire UI, state, and event handling.
 |---|---|---|
 | `documents` | `InternalDocument[]` | All open files; extends `GreyDocumentRecord` with preview bitmaps and render dimensions |
 | `activeDocumentId` | `string \| null` | ID of the currently selected tab |
-| `mode` | `'rotate' \| 'crop'` | Current editing mode |
+| `mode` | `'rotate' \| 'crop' \| 'level'` | Current editing mode |
 | `rotationDrag` | object \| null | Tracks the start position and angle of a canvas drag gesture |
 | `rotationPreviewing` | `boolean` | `true` while a CSS-transform live preview is in progress |
 | `currentRotationPreview` | `number` | The angle currently shown via CSS transform |
@@ -104,11 +104,11 @@ The editor renders a fixed HTML shell (`renderShell()`) with `data-role` attribu
 - `dropzone` — full-surface drag-and-drop overlay that activates on `dragenter`
 - `canvas` / `overlay` — stacked canvases; `canvas` shows the preview bitmap, `overlay` handles crop and rotation guide drawing
 - `edit-fieldset` / `save-fieldset` — sidebar panels for editing controls and export settings
-- `rotate-controls` / `crop-controls` — mode-specific control groups within the edit fieldset
+- `rotate-controls` / `crop-controls` / `level-controls` — mode-specific control groups within the edit fieldset
 
 The shell is laid out as a five-row grid: top toolbar, tabs, edit toolbar, workspace, and status bar. The workspace row is the only flexible track (`minmax(0, 1fr)`), so zoomed canvases scroll inside the canvas pane instead of pushing the status bar out of view.
 
-The preview canvas (`.grey-editor__canvas`) applies a CSS black-and-white simulation via `filter: grayscale(100%)`, while the overlay canvas remains unfiltered so crop and rotation guides stay high-contrast.
+The preview canvas (`.grey-editor__canvas`) applies a CSS black-and-white simulation via `filter: grayscale(100%)`, while the overlay canvas remains unfiltered so crop and rotation guides stay high-contrast. Levels adjustments are baked into the worker preview bitmap and then shown through this grayscale filter.
 
 **File intake**
 
@@ -139,6 +139,15 @@ In crop mode, `pointerdown`, `pointermove`, and `pointerup` listeners on the ove
 Confirming with the toolbar button or keyboard shortcut calls `applyCrop()`, which reads `cropDraft`, converts coordinates from preview space to rendered-source space using the stored `renderedWidth` / `renderedHeight` ratio, and calls `appendCropOperation`.
 
 Crop pointer coordinates are not clamped to the visible canvas bounds, so users can drag past the current image edge to create a larger crop region.
+
+**Level interaction**
+
+Level mode exposes Photoshop-style controls for:
+- black point (`0..254`)
+- midtone position (`0..255`, default `128`)
+- white point (`1..255`)
+
+Each change updates or appends a trailing `LevelOperation`, schedules a worker preview render, and marks the document dirty. Midtone UI values are mapped to the internal gamma representation used by the worker. The toolbar includes a **Reset levels** button that restores `0 / 128 / 255`.
 
 **Export / save**
 

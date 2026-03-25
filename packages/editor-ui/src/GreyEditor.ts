@@ -5,6 +5,7 @@ import {
   getDownloadFileName,
   isSupportedImageFile,
   scaleDimensions,
+  setTrailingLevelOperation,
   setTrailingRotationOperation,
   updateExportSettings
 } from '@grey/editor-core';
@@ -15,6 +16,7 @@ import type {
   ExportDocumentRequest,
   ExportFormat,
   GreyDocumentRecord,
+  LevelsInput,
   LoadDocumentRequest,
   Operation,
   PreviewRenderedResponse,
@@ -209,12 +211,21 @@ class GreyEditorApp implements GreyEditorInstance {
   private readonly rotationNumber: HTMLInputElement;
   private readonly modeRotateButton: HTMLButtonElement;
   private readonly modeCropButton: HTMLButtonElement;
+  private readonly modeLevelButton: HTMLButtonElement;
   private readonly rotationGridCheckbox: HTMLInputElement;
   private readonly rotateControlsElement: HTMLDivElement;
   private readonly cropControlsElement: HTMLDivElement;
+  private readonly levelControlsElement: HTMLDivElement;
   private readonly resetAngleButton: HTMLButtonElement;
   private readonly cropConfirmButton: HTMLButtonElement;
   private readonly resetCropButton: HTMLButtonElement;
+  private readonly levelBlackSlider: HTMLInputElement;
+  private readonly levelBlackNumber: HTMLInputElement;
+  private readonly levelMidtoneSlider: HTMLInputElement;
+  private readonly levelMidtoneNumber: HTMLInputElement;
+  private readonly levelWhiteSlider: HTMLInputElement;
+  private readonly levelWhiteNumber: HTMLInputElement;
+  private readonly resetLevelsButton: HTMLButtonElement;
   private readonly errorElement: HTMLDivElement;
   private readonly statusTextElement: HTMLDivElement;
   private readonly editFieldsetElement: HTMLFieldSetElement;
@@ -226,7 +237,7 @@ class GreyEditorApp implements GreyEditorInstance {
   private readonly saveConfirmButton: HTMLButtonElement;
 
   private activeDocumentId: string | null = null;
-  private mode: 'rotate' | 'crop' = 'rotate';
+  private mode: 'rotate' | 'crop' | 'level' = 'rotate';
   private rotationDrag: { startMouseAngle: number; startAngle: number; canvasCenterX: number; canvasCenterY: number } | null = null;
   private rotationPreviewing = false;
   private currentRotationPreview = 0;
@@ -269,11 +280,20 @@ class GreyEditorApp implements GreyEditorInstance {
     this.rotationNumber = this.requireElement('[data-role="rotation-number"]');
     this.modeRotateButton = this.requireElement('[data-role="mode-rotate"]');
     this.modeCropButton = this.requireElement('[data-role="mode-crop"]');
+    this.modeLevelButton = this.requireElement('[data-role="mode-level"]');
     this.rotateControlsElement = this.requireElement('[data-role="rotate-controls"]');
     this.cropControlsElement = this.requireElement('[data-role="crop-controls"]');
+    this.levelControlsElement = this.requireElement('[data-role="level-controls"]');
     this.resetAngleButton = this.requireElement('[data-role="reset-angle"]');
     this.cropConfirmButton = this.requireElement('[data-role="crop-confirm"]');
     this.resetCropButton = this.requireElement('[data-role="reset-crop"]');
+    this.levelBlackSlider = this.requireElement('[data-role="level-black-slider"]');
+    this.levelBlackNumber = this.requireElement('[data-role="level-black-number"]');
+    this.levelMidtoneSlider = this.requireElement('[data-role="level-midtone-slider"]');
+    this.levelMidtoneNumber = this.requireElement('[data-role="level-midtone-number"]');
+    this.levelWhiteSlider = this.requireElement('[data-role="level-white-slider"]');
+    this.levelWhiteNumber = this.requireElement('[data-role="level-white-number"]');
+    this.resetLevelsButton = this.requireElement('[data-role="reset-levels"]');
     this.rotationGridCheckbox = this.requireElement('[data-role="rotation-grid-checkbox"]');
     this.editFieldsetElement = this.requireElement('[data-role="edit-fieldset"]');
     this.saveFieldsetElement = this.requireElement('[data-role="save-fieldset"]');
@@ -414,11 +434,20 @@ class GreyEditorApp implements GreyEditorInstance {
     this.listen(this.modeRotateButton, 'click', () => {
       this.mode = 'rotate';
       this.cropDraft = null;
+      this.rotationDrag = null;
       this.drawOverlay();
       this.render();
     });
     this.listen(this.modeCropButton, 'click', () => {
       this.mode = 'crop';
+      this.rotationDrag = null;
+      this.cropReady = false;
+      this.cropDraft = null;
+      this.drawOverlay();
+      this.render();
+    });
+    this.listen(this.modeLevelButton, 'click', () => {
+      this.mode = 'level';
       this.rotationDrag = null;
       this.cropReady = false;
       this.cropDraft = null;
@@ -458,6 +487,24 @@ class GreyEditorApp implements GreyEditorInstance {
       this.rotationGrid = this.rotationGridCheckbox.checked;
       this.drawOverlay();
       this.renderSidebar();
+    });
+    this.listen(this.levelBlackSlider, 'input', () => this.handleLevelControlInput('slider'));
+    this.listen(this.levelBlackNumber, 'input', () => this.handleLevelControlInput('number'));
+    this.listen(this.levelMidtoneSlider, 'input', () => this.handleLevelControlInput('slider'));
+    this.listen(this.levelMidtoneNumber, 'input', () => this.handleLevelControlInput('number'));
+    this.listen(this.levelWhiteSlider, 'input', () => this.handleLevelControlInput('slider'));
+    this.listen(this.levelWhiteNumber, 'input', () => this.handleLevelControlInput('number'));
+    this.listen(this.resetLevelsButton, 'click', () => {
+      const activeDocument = this.getActiveDocumentInternal();
+      if (!activeDocument) return;
+
+      const defaults = getDefaultLevelsInput();
+      this.syncLevelControls(defaults);
+      activeDocument.operations = setTrailingLevelOperation(activeDocument.operations, defaults);
+      activeDocument.dirty = true;
+      this.schedulePreview(activeDocument.id);
+      this.renderSidebar();
+      this.renderStatus();
     });
     this.listen(this.tabsElement, 'click', (event) => {
       const rawTarget = event.target;
@@ -694,6 +741,48 @@ class GreyEditorApp implements GreyEditorInstance {
     this.render();
   }
 
+  private handleLevelControlInput(source: 'slider' | 'number'): void {
+    const activeDocument = this.getActiveDocumentInternal();
+    if (!activeDocument) {
+      return;
+    }
+
+    const parsed = this.parseLevelControls(source);
+    const normalized = normalizeLevelsInput(parsed);
+    this.syncLevelControls(normalized);
+
+    activeDocument.operations = setTrailingLevelOperation(activeDocument.operations, normalized);
+    activeDocument.dirty = true;
+    this.schedulePreview(activeDocument.id);
+    this.renderSidebar();
+    this.renderStatus();
+  }
+
+  private parseLevelControls(source: 'slider' | 'number'): LevelsInput {
+    const blackInput = source === 'slider' ? this.levelBlackSlider : this.levelBlackNumber;
+    const whiteInput = source === 'slider' ? this.levelWhiteSlider : this.levelWhiteNumber;
+    const midtoneInput = source === 'slider' ? this.levelMidtoneSlider : this.levelMidtoneNumber;
+    const blackPoint = Number.parseFloat(blackInput.value);
+    const whitePoint = Number.parseFloat(whiteInput.value);
+    const midtone = Number.parseFloat(midtoneInput.value);
+
+    return {
+      blackPoint: Number.isFinite(blackPoint) ? blackPoint : 0,
+      whitePoint: Number.isFinite(whitePoint) ? whitePoint : 255,
+      gamma: midtoneToGamma(Number.isFinite(midtone) ? midtone : 128)
+    };
+  }
+
+  private syncLevelControls(levels: LevelsInput): void {
+    this.levelBlackSlider.value = `${levels.blackPoint}`;
+    this.levelBlackNumber.value = `${levels.blackPoint}`;
+    this.levelWhiteSlider.value = `${levels.whitePoint}`;
+    this.levelWhiteNumber.value = `${levels.whitePoint}`;
+    const midtone = gammaToMidtone(levels.gamma);
+    this.levelMidtoneSlider.value = `${midtone}`;
+    this.levelMidtoneNumber.value = `${midtone}`;
+  }
+
   private handlePointerDown(event: PointerEvent): void {
     const activeDocument = this.getActiveDocumentInternal();
 
@@ -829,7 +918,8 @@ class GreyEditorApp implements GreyEditorInstance {
     this.drawOverlay();
   }
 
-  private applyCrop(): void {    const documentRecord = this.getActiveDocumentInternal();
+  private applyCrop(): void {
+    const documentRecord = this.getActiveDocumentInternal();
 
     if (!documentRecord || !this.cropDraft || documentRecord.previewWidth === 0 || documentRecord.previewHeight === 0) {
       return;
@@ -994,15 +1084,18 @@ class GreyEditorApp implements GreyEditorInstance {
 
     this.modeRotateButton.classList.toggle('is-active', this.mode === 'rotate');
     this.modeCropButton.classList.toggle('is-active', this.mode === 'crop');
+    this.modeLevelButton.classList.toggle('is-active', this.mode === 'level');
 
     this.rotateControlsElement.hidden = this.mode !== 'rotate';
     this.cropControlsElement.hidden = this.mode !== 'crop';
+    this.levelControlsElement.hidden = this.mode !== 'level';
 
     this.rotationGridCheckbox.checked = this.rotationGrid;
     this.cropConfirmButton.disabled = !this.cropReady;
 
     if (!activeDocument) {
       this.rotationNumber.value = '0';
+      this.syncLevelControls(getDefaultLevelsInput());
       return;
     }
 
@@ -1010,6 +1103,8 @@ class GreyEditorApp implements GreyEditorInstance {
       const rotation = getCurrentRotation(activeDocument.operations);
       this.rotationNumber.value = `${rotation}`;
     }
+
+    this.syncLevelControls(getCurrentLevelsInput(activeDocument.operations));
 
     this.syncSaveForm(activeDocument);
   }
@@ -1202,6 +1297,7 @@ class GreyEditorApp implements GreyEditorInstance {
           <div class="grey-editor__edit-group">
             <button class="grey-editor__button" data-role="mode-rotate" type="button">Rotate</button>
             <button class="grey-editor__button" data-role="mode-crop" type="button">Crop</button>
+            <button class="grey-editor__button" data-role="mode-level" type="button">Level</button>
           </div>
           <div class="grey-editor__edit-group" data-role="rotate-controls">
             <label class="grey-editor__label" for="grey-rotation-number">Angle</label>
@@ -1215,6 +1311,24 @@ class GreyEditorApp implements GreyEditorInstance {
             <button class="grey-editor__button grey-editor__button--accent" data-role="crop-confirm" type="button" disabled>Confirm crop</button>
             <button class="grey-editor__button" data-role="reset-crop" type="button">Reset crop</button>
           </div>
+          <div class="grey-editor__edit-group" data-role="level-controls" hidden>
+            <div class="grey-editor__level-control">
+              <label class="grey-editor__label" for="grey-level-black">Black</label>
+              <input class="grey-editor__slider grey-editor__slider--toolbar" data-role="level-black-slider" id="grey-level-black" max="254" min="0" step="1" type="range" value="0" />
+              <input class="grey-editor__input grey-editor__input--narrow" data-role="level-black-number" max="254" min="0" step="1" type="number" value="0" />
+            </div>
+            <div class="grey-editor__level-control">
+              <label class="grey-editor__label" for="grey-level-midtone">Midtone</label>
+              <input class="grey-editor__slider grey-editor__slider--toolbar" data-role="level-midtone-slider" id="grey-level-midtone" max="255" min="0" step="1" type="range" value="128" />
+              <input class="grey-editor__input grey-editor__input--narrow" data-role="level-midtone-number" max="255" min="0" step="1" type="number" value="128" />
+            </div>
+            <div class="grey-editor__level-control">
+              <label class="grey-editor__label" for="grey-level-white">White</label>
+              <input class="grey-editor__slider grey-editor__slider--toolbar" data-role="level-white-slider" id="grey-level-white" max="255" min="1" step="1" type="range" value="255" />
+              <input class="grey-editor__input grey-editor__input--narrow" data-role="level-white-number" max="255" min="1" step="1" type="number" value="255" />
+            </div>
+            <button class="grey-editor__button" data-role="reset-levels" type="button">Reset levels</button>
+          </div>
         </fieldset>
       </div>
       <div class="grey-editor__workspace">
@@ -1223,7 +1337,7 @@ class GreyEditorApp implements GreyEditorInstance {
             <h3>Drop scans here</h3>
             <p>
               Browse for JPEG, PNG, or TIFF files, or drop a folder of scans. Grey keeps editing local,
-              with live preview for rotation, crop, and export settings.
+              with live preview for rotation, crop, level, and export settings.
             </p>
             <button class="grey-editor__button" data-role="open" type="button">Open files</button>
           </div>
@@ -1319,6 +1433,54 @@ function getCurrentRotation(operations: Operation[]): number {
   }
 
   return 0;
+}
+
+function getDefaultLevelsInput(): LevelsInput {
+  return {
+    blackPoint: 0,
+    whitePoint: 255,
+    gamma: 1
+  };
+}
+
+function getCurrentLevelsInput(operations: Operation[]): LevelsInput {
+  for (let index = operations.length - 1; index >= 0; index -= 1) {
+    const operation = operations[index];
+
+    if (operation?.kind === 'level') {
+      return normalizeLevelsInput(operation.input);
+    }
+  }
+
+  return getDefaultLevelsInput();
+}
+
+function normalizeLevelsInput(input: LevelsInput): LevelsInput {
+  const blackPoint = Math.round(clampNumber(input.blackPoint, 0, 254));
+  const whitePoint = Math.round(clampNumber(input.whitePoint, blackPoint + 1, 255));
+  const gamma = Math.round(clampNumber(input.gamma, 0.1, 9.99) * 100) / 100;
+
+  return {
+    blackPoint,
+    whitePoint,
+    gamma
+  };
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function midtoneToGamma(midtone: number): number {
+  const normalizedMidtone = clampNumber(midtone, 0, 255) / 255;
+  const safeNormalizedMidtone = clampNumber(normalizedMidtone, 1 / 255, 254 / 255);
+  return Math.log(0.5) / Math.log(safeNormalizedMidtone);
+}
+
+function gammaToMidtone(gamma: number): number {
+  const safeGamma = clampNumber(gamma, 0.1, 9.99);
+  const normalizedMidtone = Math.pow(0.5, 1 / safeGamma);
+  return Math.round(clampNumber(normalizedMidtone * 255, 0, 255));
 }
 
 function normalizeDraftRect(draft: CropDraftState): CropRect {

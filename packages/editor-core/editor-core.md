@@ -42,6 +42,17 @@ ops = setTrailingRotationOperation(ops, 30);
 // ops = [{ kind: 'rotate', degrees: 30 }]
 ```
 
+#### `normalizeLevelsInput(input)`
+
+Normalizes Photoshop-style level inputs used by `LevelOperation`:
+- `blackPoint` clamped to `0..254`
+- `whitePoint` clamped to `(blackPoint + 1)..255`
+- `gamma` clamped to `0.1..9.99` and rounded to 2 decimals
+
+#### `setTrailingLevelOperation(operations, input)`
+
+Implements the same set-trailing pattern for level edits: if the last operation is already `kind: 'level'`, it is replaced; otherwise a new level operation is appended.
+
 #### `appendCropOperation(operations, rect, currentWidth, currentHeight)`
 
 Appends a `CropOperation` to the operations list. The supplied rect is normalized (negative dimensions corrected, integer pixel coordinates) via `normalizeCropRect` before being stored.
