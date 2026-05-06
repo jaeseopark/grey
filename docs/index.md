@@ -1,6 +1,6 @@
 # Grey — Documentation Index
 
-Grey is an in-browser library for post-processing scanned images: rotation with automatic padding, non-destructive crop, Photoshop-style levels adjustment, and export to JPEG in greyscale color space.
+Grey is an in-browser library for post-processing scanned images: rotation with automatic padding, non-destructive crop, Photoshop-style levels adjustment, and export to JPEG in greyscale color space. It is available as a vanilla JS API (`@grey/editor-ui`) and as a React component (`grey`).
 
 ## Table of Contents
 
