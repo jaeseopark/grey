@@ -1,9 +1,19 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
+import { copyFileSync } from 'node:fs';
 
 export default defineConfig({
-  plugins: [cssInjectedByJsPlugin()],
+  plugins: [
+    {
+      name: 'copy-styles',
+      closeBundle() {
+        copyFileSync(
+          resolve(__dirname, 'src/styles.css'),
+          resolve(__dirname, 'dist/styles.css')
+        );
+      }
+    }
+  ],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
