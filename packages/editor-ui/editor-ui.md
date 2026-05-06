@@ -8,6 +8,7 @@
 
 ```ts
 import { createGreyEditor } from '@grey/editor-ui';
+import '@grey/editor-ui/styles.css'; // optional: import the default editor styles
 
 const editor = createGreyEditor({
   target: '#grey-editor',
@@ -18,9 +19,10 @@ const editor = createGreyEditor({
 
 ### IIFE (single `<script>` tag)
 
-The package ships a self-contained IIFE build at `dist/grey-editor.iife.js`. The worker and CSS are both bundled inside the file — no extra assets are required.
+The package ships a self-contained IIFE build at `dist/grey-editor.iife.js`. The worker is bundled inside the file. A separate `dist/styles.css` is emitted alongside it.
 
 ```html
+<link rel="stylesheet" href="styles.css" />
 <script src="grey-editor.iife.js"></script>
 <script>
   const editor = GreyEditor.createGreyEditor({ target: '#grey-editor' });
@@ -30,6 +32,7 @@ The package ships a self-contained IIFE build at `dist/grey-editor.iife.js`. The
 This file is also served via the `unpkg` field in `package.json`, so it can be referenced from a CDN:
 
 ```html
+<link rel="stylesheet" href="https://unpkg.com/@grey/editor-ui/dist/styles.css" />
 <script src="https://unpkg.com/@grey/editor-ui/dist/grey-editor.iife.js"></script>
 ```
 
@@ -197,4 +200,4 @@ Errors from any handler are caught and posted back as a `WorkerFailure` response
 
 ### `index.ts`
 
-Re-exports `createGreyEditor`, `CreateGreyEditorOptions`, and `GreyEditorInstance` as the package's public surface. Also imports `styles.css` so bundlers include the editor styles when the package is consumed.
+Re-exports `createGreyEditor`, `CreateGreyEditorOptions`, and `GreyEditorInstance` as the package's public surface. The package does **not** auto-import `styles.css` — consumers opt in by importing `@grey/editor-ui/styles.css` explicitly.

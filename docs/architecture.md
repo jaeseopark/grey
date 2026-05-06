@@ -6,6 +6,7 @@ The library exposes a small framework-agnostic API so any host web application c
 
 ```ts
 import { createGreyEditor } from '@grey/editor-ui';
+import '@grey/editor-ui/styles.css'; // optional: default styles
 
 const editor = createGreyEditor({
   target: '#grey-editor',
@@ -14,7 +15,20 @@ const editor = createGreyEditor({
 });
 ```
 
-Available methods:
+A React component wrapper is also available via the `grey` npm package:
+
+```tsx
+import Grey from 'grey';
+import '@grey/editor-ui/styles.css'; // optional: default styles
+
+const MyPage = () => (
+  <div style={{ height: '780px' }}>
+    <Grey allowFolders maxParallelDecodes={2} />
+  </div>
+);
+```
+
+Available methods on the vanilla JS instance:
 
 * `createGreyEditor(options)` — mounts the editor into the target element
 * `editor.openFiles(FileList | File[])` — programmatically open files
