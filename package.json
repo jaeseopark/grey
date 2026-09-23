@@ -1,7 +1,10 @@
 {
   "name": "grey-workspace",
   "private": true,
-  "packageManager": "pnpm@10.6.2",
+  "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=26.0.0"
+  },
   "scripts": {
     "dev": "pnpm --filter @grey/demo dev",
     "build": "pnpm -r build",
