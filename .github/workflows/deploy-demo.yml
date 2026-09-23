@@ -56,7 +56,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm --filter @grey/shared-types --filter @grey/editor-core --filter @grey/editor-ui build
+        run: pnpm --filter @grey/shared-types --filter @grey/editor-core --filter @grey/image-worker --filter @grey/editor-ui build
 
       - name: Build demo app
         id: build
