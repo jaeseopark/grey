@@ -1,0 +1,115 @@
+name: Deploy Demo App
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/demo/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-demo.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-west-2
+  S3_BUCKET: chamfered-webapps
+  S3_PREFIX: grey
+  AWS_ACCOUNT_ID: '811555881555'
+  CLOUDFRONT_DISTRIBUTION_ID: E2221UPIQ451E5
+
+jobs:
+  build:
+    name: Build Demo App
+    runs-on: ubuntu-latest
+    outputs:
+      build-dir: ${{ steps.build.outputs.dir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm --filter @grey/shared-types --filter @grey/editor-core --filter @grey/editor-ui build
+
+      - name: Build demo app
+        id: build
+        run: |
+          cd apps/demo
+          pnpm build
+          echo "dir=dist" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: demo-build
+          path: apps/demo/dist
+          retention-days: 1
+
+  deploy:
+    name: Deploy to S3 & CloudFront
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: demo-build
+          path: ./dist
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-deploy-grey
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./dist s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/ \
+            --delete \
+            --cache-control 'public, max-age=3600' \
+            --exclude '*.html' && \
+          aws s3 sync ./dist s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/ \
+            --cache-control 'public, max-age=0, must-revalidate' \
+            --include '*.html'
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths '/*'
+
+      - name: Deployment Summary
+        run: |
+          echo "✓ Deployment completed successfully"
+          echo "S3 Bucket: ${{ env.S3_BUCKET }}"
+          echo "Region: ${{ env.AWS_REGION }}"
+          echo "CloudFront Distribution: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}"
