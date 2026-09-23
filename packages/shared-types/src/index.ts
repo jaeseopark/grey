@@ -123,7 +123,8 @@ export interface DocumentExportedResponse {
   requestId: number;
   type: 'document-exported';
   documentId: string;
-  blob: Blob;
+  blobBuffer: ArrayBuffer;
+  blobMimeType: string;
   outputWidth: number;
   outputHeight: number;
   format: ExportFormat;

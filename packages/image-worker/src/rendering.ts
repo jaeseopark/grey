@@ -341,7 +341,14 @@ function get2DContext(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2
 async function ensureJpegEncoderInitialized(): Promise<void> {
   if (!jpegEncoderInitPromise) {
     jpegEncoderInitPromise = initJpegEncoder({
-      locateFile: (path: string, prefix: string) => (path.endsWith('.wasm') ? mozjpegEncoderWasmUrl : `${prefix}${path}`)
+      locateFile: (path: string, prefix: string) => {
+        if (path.endsWith('.wasm')) {
+          // Resolve to absolute URL using worker's origin (works with inlined blob workers)
+          const url = new URL(mozjpegEncoderWasmUrl, self.origin + '/');
+          return url.href;
+        }
+        return `${prefix}${path}`;
+      }
     });
   }
 

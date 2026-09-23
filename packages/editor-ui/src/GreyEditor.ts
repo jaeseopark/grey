@@ -34,6 +34,13 @@ interface InternalDocument extends GreyDocumentRecord {
   previewRevision: number;
 }
 
+interface MainThreadExportedResponse {
+  blob: Blob;
+  outputWidth: number;
+  outputHeight: number;
+  format: ExportFormat;
+}
+
 interface DirectoryEntryLike {
   kind: 'file' | 'directory';
   getFile?: () => Promise<File>;
@@ -143,7 +150,7 @@ class GreyWorkerClient {
     fileName: string,
     operations: Operation[],
     settings: InternalDocument['exportSettings']
-  ): Promise<DocumentExportedResponse> {
+  ): Promise<MainThreadExportedResponse> {
     const response = await this.request<Omit<ExportDocumentRequest, 'requestId'>, WorkerResponse>({
       type: 'export-document',
       documentId,
@@ -156,7 +163,18 @@ class GreyWorkerClient {
       throw new Error('Unexpected response when exporting document.');
     }
 
-    return response;
+    // Reconstruct blob from ArrayBuffer
+    // Using any cast for blob buffer properties as they are added by worker conversion
+    const blobBuffer = (response as any).blobBuffer as ArrayBuffer;
+    const blobMimeType = (response as any).blobMimeType as string;
+    const blob = new Blob([blobBuffer], { type: blobMimeType });
+
+    return {
+      blob: blob,
+      outputWidth: response.outputWidth,
+      outputHeight: response.outputHeight,
+      format: response.format
+    };
   }
 
   async deleteDocument(documentId: string): Promise<void> {

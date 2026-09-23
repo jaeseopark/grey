@@ -72,17 +72,19 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         }
 
         const exported = await exportDocument(source, request.operations, request.settings);
-        const response: WorkerResponse = {
+        const blobBuffer = await exported.blob.arrayBuffer();
+        const response: any = {
           requestId: request.requestId,
           type: 'document-exported',
           documentId: request.documentId,
-          blob: exported.blob,
+          blobBuffer: blobBuffer,
+          blobMimeType: exported.blob.type,
           outputWidth: exported.width,
           outputHeight: exported.height,
           format: request.settings.format
         };
 
-        self.postMessage(response);
+        self.postMessage(response, [blobBuffer]);
         return;
       }
       case 'delete-document': {
