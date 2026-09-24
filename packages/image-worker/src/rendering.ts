@@ -141,26 +141,44 @@ async function decodePdfBuffer(buffer: ArrayBuffer): Promise<LoadedSource> {
   const page = await pdf.getPage(1);
   const viewport = page.getViewport({ scale: 2 }); // 2x scale for better quality
 
-  const canvas = new OffscreenCanvas(viewport.width, viewport.height);
+  // Ensure canvas dimensions are integers
+  const width = Math.ceil(viewport.width);
+  const height = Math.ceil(viewport.height);
+  
+  const canvas = new OffscreenCanvas(width, height);
   const context = canvas.getContext('2d');
 
   if (!context) {
     throw new Error('Canvas 2D context is unavailable in worker.');
   }
 
+  // Fill canvas with white background (PDFs may have transparent areas)
+  context.fillStyle = '#FFFFFF';
+  context.fillRect(0, 0, width, height);
+
   // Render PDF page to canvas
   // Cast context as 'any' to satisfy PDF.js type requirements
-  await page.render({
-    canvasContext: context as any,
-    viewport: viewport
-  }).promise;
+  try {
+    await page.render({
+      canvasContext: context as any,
+      viewport: viewport
+    }).promise;
+  } catch (error) {
+    throw new Error(`Failed to render PDF page: ${error instanceof Error ? error.message : String(error)}`);
+  }
 
-  const bitmap = canvas.transferToImageBitmap();
+  // Create bitmap from rendered canvas
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = canvas.transferToImageBitmap();
+  } catch (error) {
+    throw new Error(`Failed to create bitmap from rendered PDF: ${error instanceof Error ? error.message : String(error)}`);
+  }
 
   return {
     bitmap,
-    width: viewport.width,
-    height: viewport.height
+    width,
+    height
   };
 }
 
