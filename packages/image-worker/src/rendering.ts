@@ -40,21 +40,30 @@ export async function decodeImageBuffer(
   fileName: string,
   mimeType: string
 ): Promise<LoadedSource> {
-  if (isPdfFile(fileName, mimeType)) {
-    return decodePdfBuffer(buffer);
-  }
+  try {
+    if (isPdfFile(fileName, mimeType)) {
+      console.log(`[Grey Worker] Decoding PDF: ${fileName} (mime: ${mimeType})`);
+      return await decodePdfBuffer(buffer);
+    }
 
-  if (isTiffFile(fileName, mimeType)) {
-    return decodeTiffBuffer(buffer);
-  }
+    if (isTiffFile(fileName, mimeType)) {
+      console.log(`[Grey Worker] Decoding TIFF: ${fileName}`);
+      return decodeTiffBuffer(buffer);
+    }
 
-  const blob = new Blob([buffer], { type: mimeType || 'application/octet-stream' });
-  const bitmap = await createImageBitmap(blob);
-  return {
-    bitmap,
-    width: bitmap.width,
-    height: bitmap.height
-  };
+    console.log(`[Grey Worker] Decoding as image blob: ${fileName} (mime: ${mimeType})`);
+    const blob = new Blob([buffer], { type: mimeType || 'application/octet-stream' });
+    const bitmap = await createImageBitmap(blob);
+    return {
+      bitmap,
+      width: bitmap.width,
+      height: bitmap.height
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[Grey Worker] Failed to decode ${fileName}:`, message);
+    throw error;
+  }
 }
 
 export async function renderPreview(
