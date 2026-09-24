@@ -6,6 +6,10 @@ import mozjpegEncoderWasmUrl from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm?url'
 import * as UTIF from 'utif';
 import * as pdfjsLib from 'pdfjs-dist';
 
+// Configure PDF.js for use in worker context with disableWorker mode
+// Set workerSrc to a data URL placeholder since we disable the worker anyway
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,';
+
 const MOZJPEG_GRAYSCALE_COLOR_SPACE = 1;
 let jpegEncoderInitPromise: Promise<void> | null = null;
 
