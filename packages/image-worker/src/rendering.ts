@@ -5,10 +5,12 @@ import { init as initJpegEncoder } from '@jsquash/jpeg/encode';
 import mozjpegEncoderWasmUrl from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm?url';
 import * as UTIF from 'utif';
 import * as pdfjsLib from 'pdfjs-dist';
+// @ts-ignore - pdfjs-dist/build/pdf.worker.mjs has no type declarations
+import { WorkerMessageHandler } from 'pdfjs-dist/build/pdf.worker.mjs';
 
-// Configure PDF.js for use in worker context with disableWorker mode
-// Set workerSrc to a data URL placeholder since we disable the worker anyway
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'data:application/javascript;base64,';
+// Set up fake worker for PDF.js in this worker context
+(globalThis as any).pdfjsWorker = { WorkerMessageHandler };
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 const MOZJPEG_GRAYSCALE_COLOR_SPACE = 1;
 let jpegEncoderInitPromise: Promise<void> | null = null;
@@ -126,11 +128,10 @@ function decodeTiffBuffer(buffer: ArrayBuffer): LoadedSource {
 }
 
 async function decodePdfBuffer(buffer: ArrayBuffer): Promise<LoadedSource> {
-  // Disable PDF.js worker since we're already in a worker context
+  // Use fake worker setup - pdf.js will detect globalThis.pdfjsWorker and use it
   const pdf = await pdfjsLib.getDocument({ 
-    data: buffer,
-    disableWorker: true 
-  } as any).promise;
+    data: buffer
+  }).promise;
 
   // Only support single-page PDFs for now
   if (pdf.numPages !== 1) {
