@@ -18,6 +18,7 @@
     "@grey/editor-core": "workspace:*",
     "@grey/shared-types": "workspace:*",
     "@jsquash/jpeg": "^1.6.0",
+    "pdfjs-dist": "^4.0.0",
     "utif": "^3.1.0"
   },
   "scripts": {

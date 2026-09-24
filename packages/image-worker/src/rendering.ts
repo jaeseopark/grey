@@ -1,9 +1,10 @@
-import { clamp, getFormatMimeType, isTiffFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
+import { clamp, getFormatMimeType, isTiffFile, isPdfFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
 import type { ExportSettings, LevelsInput, Operation } from '@grey/shared-types';
 import { encode as encodeJpeg } from '@jsquash/jpeg';
 import { init as initJpegEncoder } from '@jsquash/jpeg/encode';
 import mozjpegEncoderWasmUrl from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm?url';
 import * as UTIF from 'utif';
+import * as pdfjsLib from 'pdfjs-dist';
 
 const MOZJPEG_GRAYSCALE_COLOR_SPACE = 1;
 let jpegEncoderInitPromise: Promise<void> | null = null;
@@ -33,6 +34,10 @@ export async function decodeImageBuffer(
   fileName: string,
   mimeType: string
 ): Promise<LoadedSource> {
+  if (isPdfFile(fileName, mimeType)) {
+    return decodePdfBuffer(buffer);
+  }
+
   if (isTiffFile(fileName, mimeType)) {
     return decodeTiffBuffer(buffer);
   }
@@ -113,6 +118,44 @@ function decodeTiffBuffer(buffer: ArrayBuffer): LoadedSource {
     bitmap: canvas.transferToImageBitmap(),
     width,
     height
+  };
+}
+
+async function decodePdfBuffer(buffer: ArrayBuffer): Promise<LoadedSource> {
+  // Disable PDF.js worker since we're already in a worker context
+  const pdf = await pdfjsLib.getDocument({ 
+    data: buffer,
+    disableWorker: true 
+  } as any).promise;
+
+  // Only support single-page PDFs for now
+  if (pdf.numPages !== 1) {
+    throw new Error(`PDF contains ${pdf.numPages} page(s). Only single-page PDFs are supported.`);
+  }
+
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 2 }); // 2x scale for better quality
+
+  const canvas = new OffscreenCanvas(viewport.width, viewport.height);
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    throw new Error('Canvas 2D context is unavailable in worker.');
+  }
+
+  // Render PDF page to canvas
+  // Cast context as 'any' to satisfy PDF.js type requirements
+  await page.render({
+    canvasContext: context as any,
+    viewport: viewport
+  }).promise;
+
+  const bitmap = canvas.transferToImageBitmap();
+
+  return {
+    bitmap,
+    width: viewport.width,
+    height: viewport.height
   };
 }
 
