@@ -1,9 +1,16 @@
-import { clamp, getFormatMimeType, isTiffFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
+import { clamp, getFormatMimeType, isTiffFile, isPdfFile, normalizeExportSettings, scaleDimensions, calculateRotatedBounds, normalizeCropRect } from '@grey/editor-core';
 import type { ExportSettings, LevelsInput, Operation } from '@grey/shared-types';
 import { encode as encodeJpeg } from '@jsquash/jpeg';
 import { init as initJpegEncoder } from '@jsquash/jpeg/encode';
 import mozjpegEncoderWasmUrl from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm?url';
 import * as UTIF from 'utif';
+import * as pdfjsLib from 'pdfjs-dist';
+// @ts-ignore - pdfjs-dist/build/pdf.worker.mjs has no type declarations
+import { WorkerMessageHandler } from 'pdfjs-dist/build/pdf.worker.mjs';
+
+// Set up fake worker for PDF.js in this worker context
+(globalThis as any).pdfjsWorker = { WorkerMessageHandler };
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 const MOZJPEG_GRAYSCALE_COLOR_SPACE = 1;
 let jpegEncoderInitPromise: Promise<void> | null = null;
@@ -33,17 +40,30 @@ export async function decodeImageBuffer(
   fileName: string,
   mimeType: string
 ): Promise<LoadedSource> {
-  if (isTiffFile(fileName, mimeType)) {
-    return decodeTiffBuffer(buffer);
-  }
+  try {
+    if (isPdfFile(fileName, mimeType)) {
+      console.log(`[Grey Worker] Decoding PDF: ${fileName} (mime: ${mimeType})`);
+      return await decodePdfBuffer(buffer);
+    }
 
-  const blob = new Blob([buffer], { type: mimeType || 'application/octet-stream' });
-  const bitmap = await createImageBitmap(blob);
-  return {
-    bitmap,
-    width: bitmap.width,
-    height: bitmap.height
-  };
+    if (isTiffFile(fileName, mimeType)) {
+      console.log(`[Grey Worker] Decoding TIFF: ${fileName}`);
+      return decodeTiffBuffer(buffer);
+    }
+
+    console.log(`[Grey Worker] Decoding as image blob: ${fileName} (mime: ${mimeType})`);
+    const blob = new Blob([buffer], { type: mimeType || 'application/octet-stream' });
+    const bitmap = await createImageBitmap(blob);
+    return {
+      bitmap,
+      width: bitmap.width,
+      height: bitmap.height
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[Grey Worker] Failed to decode ${fileName}:`, message);
+    throw error;
+  }
 }
 
 export async function renderPreview(
@@ -111,6 +131,61 @@ function decodeTiffBuffer(buffer: ArrayBuffer): LoadedSource {
 
   return {
     bitmap: canvas.transferToImageBitmap(),
+    width,
+    height
+  };
+}
+
+async function decodePdfBuffer(buffer: ArrayBuffer): Promise<LoadedSource> {
+  // Use fake worker setup - pdf.js will detect globalThis.pdfjsWorker and use it
+  const pdf = await pdfjsLib.getDocument({ 
+    data: buffer
+  }).promise;
+
+  // Only support single-page PDFs for now
+  if (pdf.numPages !== 1) {
+    throw new Error(`PDF contains ${pdf.numPages} page(s). Only single-page PDFs are supported.`);
+  }
+
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 2 }); // 2x scale for better quality
+
+  // Ensure canvas dimensions are integers
+  const width = Math.ceil(viewport.width);
+  const height = Math.ceil(viewport.height);
+  
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    throw new Error('Canvas 2D context is unavailable in worker.');
+  }
+
+  // Fill canvas with white background (PDFs may have transparent areas)
+  context.fillStyle = '#FFFFFF';
+  context.fillRect(0, 0, width, height);
+
+  // Render PDF page to canvas
+  // Cast context as 'any' to satisfy PDF.js type requirements
+  try {
+    await page.render({
+      canvasContext: context as any,
+      viewport: viewport
+    }).promise;
+  } catch (error) {
+    throw new Error(`Failed to render PDF page: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  // Create bitmap from rendered canvas
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = canvas.transferToImageBitmap();
+  } catch (error) {
+    throw new Error(`Failed to create bitmap from rendered PDF: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  return {
+    bitmap,
     width,
     height
   };
