@@ -1,6 +1,6 @@
 {
   "name": "@grey/editor-ui",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "main": "./dist/grey-editor.js",
   "module": "./dist/grey-editor.js",
@@ -9,7 +9,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/grey-editor.js"
-    }
+    },
+    "./styles.css": "./dist/styles.css"
   },
   "unpkg": "./dist/grey-editor.iife.js",
   "files": [
@@ -24,8 +25,5 @@
     "build": "vite build && tsc -p tsconfig.build.json",
     "test": "vitest run --passWithNoTests",
     "lint": "tsc --noEmit -p tsconfig.json"
-  },
-  "devDependencies": {
-    "vite-plugin-css-injected-by-js": "^4.0.1"
   }
 }

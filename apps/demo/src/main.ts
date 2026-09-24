@@ -1,4 +1,5 @@
 import { createGreyEditor } from '@grey/editor-ui';
+import '@grey/editor-ui/styles.css';
 import './styles.css';
 
 const app = document.querySelector<HTMLDivElement>('#app');
