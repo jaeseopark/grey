@@ -10,6 +10,7 @@ import {
   updateExportSettings
 } from '@grey/editor-core';
 import GreyWorkerConstructor from './grey.worker.ts?worker&inline';
+import packageJson from '../package.json';
 import type {
   CropRect,
   DocumentExportedResponse,
@@ -1035,7 +1036,7 @@ class GreyEditorApp implements GreyEditorInstance {
 
   private renderTabs(): void {
     if (this.documents.length === 0) {
-      this.tabsElement.innerHTML = '<span class="grey-editor__hint">Open scans or drop them onto the canvas area.</span>';
+      this.tabsElement.innerHTML = '<span class="grey-editor__hint">Your open files will appear here</span>';
       return;
     }
 
@@ -1140,7 +1141,7 @@ class GreyEditorApp implements GreyEditorInstance {
     const activeDocument = this.getActiveDocumentInternal();
 
     if (!activeDocument) {
-      this.statusTextElement.textContent = 'Ready for local files. Nothing is uploaded anywhere.';
+      this.statusTextElement.textContent = `v${packageJson.version}`;
     } else if (!this.statusTextElement.textContent || this.statusTextElement.textContent.startsWith('Rendering ')) {
       this.statusTextElement.textContent = `${activeDocument.name}: ${activeDocument.renderedWidth} x ${activeDocument.renderedHeight}${activeDocument.dirty ? ' • unsaved changes' : ''}`;
     }
